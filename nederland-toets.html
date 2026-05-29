@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet">
@@ -35,14 +35,25 @@
       linear-gradient(180deg, var(--cream-warm) 0%, var(--cream-soft) 100%);
     color: var(--ink);
     overflow: hidden;
+    overscroll-behavior: none;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
   #app {
     max-width: 1280px;
     margin: 0 auto;
-    padding: 12px 20px;
+    /* Respect notch/status bar bovenaan en navigatiebalk onderaan op mobiel */
+    padding:
+      max(12px, env(safe-area-inset-top))
+      max(20px, env(safe-area-inset-right))
+      max(12px, env(safe-area-inset-bottom))
+      max(20px, env(safe-area-inset-left));
+    /* 100dvh = dynamic viewport height: krimpt mee met de browser-UI op mobiel,
+       100vh wordt vaak groter dan het echte zichtbare scherm. svh = small viewport
+       als veiligste fallback. */
     height: 100vh;
+    height: 100svh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
   }
@@ -170,7 +181,29 @@
     gap: 14px;
   }
   @media (max-width: 850px) {
-    .quiz-layout { grid-template-columns: 1fr; grid-template-rows: minmax(0,1.4fr) minmax(0,1fr); }
+    .quiz-layout {
+      grid-template-columns: 1fr;
+      /* op mobiel: vragenpaneel iets meer ruimte (1.2 ipv 1) zodat
+         feedback + Volgende-knop niet wegvallen */
+      grid-template-rows: minmax(0, 1.1fr) minmax(0, 1.2fr);
+      gap: 10px;
+    }
+  }
+  /* Compacter op kleine schermen — minder padding, kleinere typografie */
+  @media (max-width: 600px) {
+    #app { padding: 8px 10px max(8px, env(safe-area-inset-bottom)); }
+    h1 { font-size: 1.5em; margin: 2px 0 6px; }
+    .map-box, .question-box { padding: 10px; border-radius: 16px; }
+    .question-box .question { font-size: 1.1em; margin-bottom: 10px; }
+    .answer-btn { padding: 11px 8px; font-size: 0.95em; border-radius: 12px; }
+    .answers { gap: 8px; }
+    .feedback { margin-top: 10px; padding: 10px 12px; font-size: 0.9em; }
+    .next-btn { margin-top: 10px; padding: 11px 18px; font-size: 1em; }
+    .menu-btn { padding: 16px 12px; font-size: 1.05em; }
+    .menu-btn .emoji { font-size: 1.4em; }
+    .score { padding: 6px 12px; font-size: 0.88em; }
+    .back-btn { padding: 6px 12px; font-size: 0.82em; }
+    .topbar { margin-bottom: 6px; }
   }
 
   .map-box, .question-box {
@@ -285,6 +318,11 @@
       0 8px 18px rgba(249,166,32,0.30);
     transition: all 0.15s;
     letter-spacing: 0.3px;
+    /* Blijft onderaan plakken in het scrollende vragenpaneel,
+       zodat hij altijd zichtbaar is — ook als de feedback langer is */
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
   }
   .next-btn:hover {
     transform: translateY(-2px);
