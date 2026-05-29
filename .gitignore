@@ -1,0 +1,15 @@
+# Claude Code project state — niet committen
+.claude/
+
+# macOS rommel
+.DS_Store
+
+# Editor folders
+.vscode/
+.idea/
+
+# Tijdelijke / gegenereerde bestanden
+*.tmp
+nl_blank.svg
+nl_raw.svg
+paths.json
