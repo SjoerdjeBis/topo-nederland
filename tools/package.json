@@ -1,0 +1,11 @@
+{
+  "name": "topo-nederland-tools",
+  "private": true,
+  "description": "Bouwt map-data.js voor Topo Nederland",
+  "scripts": { "build-map": "node build-map.js" },
+  "dependencies": {
+    "@turf/turf": "^7.4.0",
+    "mapshaper": "^0.7.68",
+    "osmtogeojson": "^3.0.0-beta.5"
+  }
+}

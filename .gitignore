@@ -13,3 +13,7 @@
 nl_blank.svg
 nl_raw.svg
 paths.json
+
+# Kaart-bouwscript: gedownloade brondata en dependencies
+tools/data/
+tools/node_modules/
