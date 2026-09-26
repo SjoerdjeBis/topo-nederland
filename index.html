@@ -38,6 +38,9 @@
     --ink:           #2c1e0f;
     --ink-soft:      #5c4a39;
     --sea:           #c9e3ec;
+    --ease-out:      cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out:   cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-spring:   cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   * { box-sizing: border-box; }
   html, body {
@@ -92,19 +95,36 @@
     font-family: 'Fraunces', serif; font-style: italic;
   }
   .style-toggle {
+    position: relative;
     display: inline-flex; gap: 4px; padding: 4px;
     margin: 10px auto 0;
     background: white; border-radius: 100px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.07);
   }
   .style-toggle button {
+    position: relative; z-index: 1;
     font-family: 'Nunito', sans-serif; font-size: 0.95em; font-weight: 800;
     border: none; border-radius: 100px; cursor: pointer;
     padding: 9px 16px; color: var(--ink-soft); background: transparent;
-    transition: background 0.15s, color 0.15s;
+    transition: color 200ms ease, transform 160ms var(--ease-out);
   }
-  .style-toggle button[aria-pressed="true"] { background: var(--fern); color: white; }
-  .style-toggle button:not([aria-pressed="true"]):hover { background: var(--cream); }
+  .style-toggle button:active { transform: scale(0.96); }
+  .style-toggle button { white-space: nowrap; }
+  .style-toggle .short { display: none; }
+  @media (max-width: 440px) {
+    .style-toggle .long { display: none; }
+    .style-toggle .short { display: inline; }
+  }
+  .style-toggle button[aria-pressed="true"] { color: white; }
+  .toggle-pill {
+    position: absolute; top: 4px; bottom: 4px; left: 0;
+    width: var(--pill-w, 0); transform: translateX(var(--pill-x, 0));
+    background: linear-gradient(135deg, var(--fern-light), var(--fern));
+    border-radius: 100px;
+    box-shadow: 0 2px 6px rgba(45,74,53,0.3);
+    transition: transform 320ms var(--ease-in-out), width 320ms var(--ease-in-out);
+  }
+  .style-toggle.no-anim .toggle-pill { transition: none; }
   .menu-grid {
     display: grid; grid-template-columns: repeat(2, 1fr);
     gap: 16px; max-width: 720px; margin: 18px auto;
@@ -120,7 +140,7 @@
     box-shadow:
       0 5px 0 rgba(0,0,0,0.18),
       0 10px 25px rgba(0,0,0,0.10);
-    transition: transform 0.15s, box-shadow 0.15s;
+    transition: transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out);
   }
   .menu-btn::before {
     content: ''; position: absolute;
@@ -129,11 +149,18 @@
     border-radius: 22px 22px 0 0;
     pointer-events: none;
   }
-  .menu-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 0 rgba(0,0,0,0.18), 0 14px 30px rgba(0,0,0,0.15);
+  @media (hover: hover) and (pointer: fine) {
+    .menu-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 0 rgba(0,0,0,0.18), 0 14px 30px rgba(0,0,0,0.15);
+    }
+    .menu-btn:hover .emoji { transform: translateY(-3px) rotate(-8deg) scale(1.08); }
   }
-  .menu-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.18); }
+  .menu-btn:active {
+    transform: translateY(3px) scale(0.98);
+    box-shadow: 0 2px 0 rgba(0,0,0,0.18), 0 4px 10px rgba(0,0,0,0.08);
+    transition-duration: 100ms;
+  }
 
   .menu-btn.prov { background: linear-gradient(135deg, #d05935, var(--terracotta) 60%, var(--terracotta-dk)); }
   .menu-btn.cap  { background: linear-gradient(135deg, #5e9670, var(--fern) 60%, var(--fern-dark)); }
@@ -147,6 +174,7 @@
   .menu-btn .emoji {
     font-size: 1.7em; display: block; margin-bottom: 4px;
     filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25));
+    transition: transform 350ms var(--ease-spring);
   }
   .menu-btn .best {
     display: block; font-size: 0.72em; font-weight: 700;
@@ -173,238 +201,249 @@
   .credits { color: var(--ink-soft); opacity: 0.7; font-size: 0.72em; margin: 14px auto 0; max-width: 560px; }
 
   /* ============ QUIZ ============ */
-  #quiz { display: none; flex-direction: column; flex: 1; min-height: 0; }
+  #app.in-quiz h1 { display: none; }
+  #quiz { display: none; flex-direction: column; flex: 1; min-height: 0; gap: 8px; }
   #quiz.active { display: flex; }
   .topbar {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 8px; gap: 10px; flex-shrink: 0; flex-wrap: wrap;
+    display: flex; align-items: center;
+    gap: 8px; flex-shrink: 0;
   }
-  .topbar-left { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .score, .streak {
     font-size: 0.95em; font-weight: 800;
     color: var(--ink);
     background: white;
-    padding: 8px 16px;
+    padding: 8px 14px;
     border-radius: 100px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.07);
     letter-spacing: 0.2px;
+    white-space: nowrap;
   }
   .score .good { color: var(--fern); }
   .score .bad  { color: var(--terracotta); }
   .streak { color: var(--marigold-dark); display: none; }
-  .streak.show { display: inline-block; animation: pop 0.35s ease; }
+  .streak.show { display: inline-block; animation: pop 380ms var(--ease-spring); }
+  .bump { display: inline-block; animation: bump 320ms var(--ease-spring); }
+  @keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.4); } 100% { transform: scale(1); } }
   .back-btn {
     font-family: 'Nunito', sans-serif;
-    background: var(--cream-soft);
+    background: white;
     color: var(--ink);
     border: none;
     padding: 8px 16px;
     border-radius: 100px;
     cursor: pointer;
-    font-size: 0.88em; font-weight: 700;
-    transition: all 0.15s;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    font-size: 0.9em; font-weight: 800;
+    transition: background 200ms ease, color 200ms ease, transform 160ms var(--ease-out);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    white-space: nowrap;
   }
-  .back-btn:hover { background: var(--terracotta); color: white; }
+  @media (hover: hover) and (pointer: fine) {
+    .back-btn:hover { background: var(--terracotta); color: white; }
+  }
+  .back-btn:active { transform: scale(0.94); }
 
   .progress {
-    height: 10px; border-radius: 100px; flex-shrink: 0;
-    background: rgba(0,0,0,0.07); overflow: hidden; margin-bottom: 10px;
+    height: 8px; border-radius: 100px; flex-shrink: 0;
+    background: rgba(0,0,0,0.07); overflow: hidden;
   }
   .progress-fill {
+    position: relative; overflow: hidden;
     height: 100%; width: 0%; border-radius: 100px;
-    background: linear-gradient(90deg, var(--fern-light), var(--fern));
-    transition: width 0.4s ease;
+    background: linear-gradient(90deg, #8fbf9b, var(--fern));
+    transition: width 600ms var(--ease-out);
   }
+  .progress-fill::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+    transform: translateX(-100%);
+  }
+  .progress-fill.shine::after { animation: shine 700ms ease-out; }
+  @keyframes shine { to { transform: translateX(100%); } }
 
+  /* Staand scherm: kaart boven, vraag eronder. Liggend: naast elkaar. */
   .quiz-layout {
     flex: 1; min-height: 0;
-    display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-    gap: 14px;
+    display: flex; flex-direction: column; gap: 10px;
   }
-  .quiz-layout.point { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
-  @media (max-width: 850px) {
-    .quiz-layout, .quiz-layout.point {
-      grid-template-columns: 1fr;
-      /* vragenpaneel iets meer ruimte zodat feedback + Volgende-knop niet wegvallen */
-      grid-template-rows: minmax(0, 1.1fr) minmax(0, 1.2fr);
-      gap: 10px;
-    }
-    /* Bij aanwijzen zijn er geen antwoordknoppen: de kaart krijgt de ruimte */
-    .quiz-layout.point { grid-template-rows: minmax(0, 1fr) auto; }
-    .quiz-layout.point .question-box { max-height: 45dvh; }
-  }
-  /* Compacter op kleine schermen */
-  @media (max-width: 600px) {
-    #app { padding: 8px 10px max(8px, env(safe-area-inset-bottom)); }
-    h1 { font-size: 1.5em; margin: 2px 0 6px; }
-    .map-box, .question-box { padding: 10px; border-radius: 16px; }
-    .question-box .question { font-size: 1.1em; margin-bottom: 10px; }
-    .answer-btn { padding: 11px 8px; font-size: 0.95em; border-radius: 12px; }
-    .answers { gap: 8px; }
-    .feedback { margin-top: 10px; padding: 10px 12px; font-size: 0.9em; }
-    .next-btn { margin-top: 10px; padding: 11px 18px; font-size: 1em; }
-    .menu-btn { padding: 16px 12px; font-size: 1.05em; }
-    .menu-btn .emoji { font-size: 1.4em; }
-    .score, .streak { padding: 6px 12px; font-size: 0.88em; }
-    .back-btn { padding: 6px 12px; font-size: 0.82em; }
-    .topbar { margin-bottom: 6px; }
-    .progress { margin-bottom: 8px; height: 8px; }
-    .style-toggle button { padding: 8px 12px; font-size: 0.88em; }
-  }
-
-  .map-box, .question-box {
-    background: white;
-    border-radius: 20px;
-    padding: 14px;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-    min-height: 0;
-    border: 1px solid rgba(0,0,0,0.03);
-  }
-  .map-box {
-    display: flex; align-items: center; justify-content: center; overflow: hidden;
-  }
-  #map-container {
-    width: 100%; height: 100%;
-    display: flex; align-items: center; justify-content: center;
-    min-height: 0;
-  }
+  .map-box { position: relative; flex: 1; min-height: 0; min-width: 0; }
+  #map-container { position: absolute; inset: 0; }
   #map-container svg {
-    max-height: 100%; max-width: 100%;
-    width: auto; height: auto; display: block;
-    border-radius: 10px;
+    width: 100%; height: 100%; display: block;
     -webkit-tap-highlight-color: transparent;
     user-select: none; -webkit-user-select: none;
   }
+  .question-box { flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
+  @media (orientation: landscape) and (min-width: 600px) {
+    .quiz-layout { flex-direction: row; gap: 24px; justify-content: center; }
+    .map-box { flex: 0 1 auto; height: 100%; aspect-ratio: 685 / 805; }
+    .question-box { width: clamp(280px, 34vw, 420px); justify-content: center; }
+  }
 
-  .question-box { display: flex; flex-direction: column; overflow-y: auto; }
-  .question-box .question {
+  .question {
     font-family: 'Fraunces', serif;
-    font-size: 1.35em; font-weight: 700;
-    margin: 0 0 16px; color: var(--ink);
-    line-height: 1.3;
+    font-size: 1.3em; font-weight: 700;
+    margin: 0; color: var(--ink);
+    line-height: 1.25;
     letter-spacing: -0.01em;
+    /* altijd ruimte voor twee regels, zodat de kaart niet verspringt */
+    min-height: 2.5em;
+    display: flex; align-items: center;
   }
   .question .target { color: var(--terracotta); }
-  .point-hint { font-family: 'Nunito', sans-serif; color: var(--ink-soft); font-weight: 700; font-size: 0.7em; margin-top: 4px; }
+  .q-anim { display: inline; animation: q-in 280ms var(--ease-out) both; }
+  @keyframes q-in { from { opacity: 0; transform: translateY(6px); filter: blur(3px); } }
 
+  /* Vak met vaste hoogte: eerst antwoorden of hint, daarna feedback + Volgende */
+  .action-area { height: 116px; position: relative; }
   .answers {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+    gap: 8px; height: 100%;
   }
   .answer-btn {
     position: relative;
-    padding: 14px 10px;
+    padding: 6px 10px;
     font-size: 1em; font-family: 'Nunito', sans-serif;
-    background: var(--cream);
+    background: white;
     border: 2px solid transparent;
     border-radius: 14px;
     cursor: pointer; text-align: center;
-    font-weight: 700; color: var(--ink);
-    transition: all 0.15s;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    font-weight: 800; color: var(--ink);
+    transition: transform 160ms var(--ease-out), border-color 200ms ease, box-shadow 200ms ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07), inset 0 -3px 0 rgba(0,0,0,0.05);
+    animation: item-in 260ms var(--ease-out) backwards;
   }
+  .answer-btn:nth-child(2) { animation-delay: 40ms; }
+  .answer-btn:nth-child(3) { animation-delay: 80ms; }
+  .answer-btn:nth-child(4) { animation-delay: 120ms; }
+  .answer-btn:active { transform: scale(0.96); transition-duration: 80ms; }
+  @keyframes item-in { from { opacity: 0; transform: translateY(8px) scale(0.97); } }
   .answer-btn .key {
     display: none;
     position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
     font-size: 0.72em; font-weight: 800; color: var(--ink-soft);
-    background: white; border-radius: 6px; padding: 1px 6px; opacity: 0.8;
+    background: var(--cream); border-radius: 6px; padding: 1px 6px; opacity: 0.8;
   }
   @media (hover: hover) and (pointer: fine) {
     .answer-btn .key { display: inline-block; }
+    .answer-btn:hover { border-color: var(--fern-light); transform: translateY(-2px); box-shadow: 0 6px 14px rgba(74,124,89,0.18), inset 0 -3px 0 rgba(0,0,0,0.05); }
+    .answer-btn:hover:active { transform: scale(0.96); }
   }
-  .answer-btn.correct .key, .answer-btn.wrong .key, .answer-btn.show-correct .key { background: rgba(255,255,255,0.25); color: white; }
-  .answer-btn:hover:not(:disabled) {
-    background: white; border-color: var(--fern);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(74,124,89,0.20);
+  .point-hint {
+    height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px dashed rgba(92,74,57,0.25); border-radius: 14px;
+    color: var(--ink-soft); font-weight: 800; font-size: 1em;
+    animation: fade-in 250ms ease both;
   }
-  .answer-btn:disabled { cursor: default; }
-  .answer-btn.correct {
-    background: linear-gradient(135deg, var(--fern-light), var(--fern));
-    color: white; border-color: var(--fern-dark);
-    animation: bounce 0.5s ease;
-  }
-  .answer-btn.wrong {
-    background: linear-gradient(135deg, #c85a35, var(--terracotta));
-    color: white; border-color: var(--terracotta-dk);
-    animation: shake 0.4s ease;
-  }
-  .answer-btn.show-correct {
-    background: linear-gradient(135deg, var(--fern-light), var(--fern));
-    color: white; border-color: var(--fern-dark);
-  }
-  @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    40% { transform: translateY(-8px); }
-    70% { transform: translateY(-3px); }
-  }
+  .point-hint .finger { display: inline-block; margin-right: 6px; animation: tap 1.6s var(--ease-in-out) infinite; }
+  @keyframes tap { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(4px) scale(0.92); } }
+  .result { display: none; height: 100%; gap: 8px; }
+  #quiz.point .answers, #quiz:not(.point) .point-hint,
+  #quiz.answered .answers, #quiz.answered .point-hint { display: none; }
+  #quiz.answered .result { display: flex; }
+
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
-    20% { transform: translateX(-5px); }
-    40% { transform: translateX(5px); }
-    60% { transform: translateX(-3px); }
-    80% { transform: translateX(3px); }
+    20% { transform: translateX(-4px); }
+    40% { transform: translateX(4px); }
+    60% { transform: translateX(-2px); }
+    80% { transform: translateX(2px); }
   }
   @keyframes pop {
     0% { transform: scale(0.6); opacity: 0; }
     70% { transform: scale(1.12); opacity: 1; }
     100% { transform: scale(1); }
   }
+  @keyframes rise {
+    from { transform: translateY(10px) scale(0.98); opacity: 0; filter: blur(2px); }
+    to { transform: none; opacity: 1; filter: none; }
+  }
 
   .feedback {
-    margin-top: 14px; padding: 12px 14px;
+    flex: 1; min-width: 0;
+    padding: 8px 12px;
     border-radius: 14px;
-    font-size: 0.96em;
-    display: none;
-    line-height: 1.45;
+    font-size: 0.92em;
+    line-height: 1.35;
     font-weight: 600;
+    overflow-y: auto;
+    display: flex; flex-direction: column; justify-content: center;
   }
   .feedback.good {
     background: linear-gradient(135deg, #e8f5ec, #d4ebd9);
     color: var(--fern-dark);
-    display: block;
     border-left: 5px solid var(--fern);
+    animation: rise 280ms var(--ease-out) both;
   }
   .feedback.bad {
     background: linear-gradient(135deg, #fbe6df, #f3d5cc);
     color: var(--terracotta-dk);
-    display: block;
     border-left: 5px solid var(--terracotta);
+    animation: rise 280ms var(--ease-out) both, shake 360ms ease 220ms;
   }
-  .feedback .streak-note { display: block; margin-top: 4px; color: var(--marigold-dark); font-weight: 800; }
+  .feedback .mark { display: inline-block; animation: pop 420ms var(--ease-spring) 80ms both; }
+  .feedback .streak-note { color: var(--marigold-dark); font-weight: 800; }
   .next-btn {
-    margin-top: 12px;
-    padding: 13px 24px;
+    flex-shrink: 0; width: 84px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
     font-family: 'Nunito', sans-serif;
-    font-size: 1.05em; font-weight: 800;
+    font-size: 0.85em; font-weight: 800;
     background: linear-gradient(135deg, var(--marigold), var(--marigold-dark));
     color: white; border: none;
     border-radius: 14px; cursor: pointer;
-    width: 100%; display: none;
-    box-shadow:
-      0 4px 0 var(--marigold-dark),
-      0 8px 18px rgba(249,166,32,0.30);
-    transition: all 0.15s;
-    letter-spacing: 0.3px;
-    /* Blijft onderaan plakken in het scrollende vragenpaneel */
-    position: sticky;
-    bottom: 0;
-    z-index: 2;
+    box-shadow: 0 4px 0 var(--marigold-dark), 0 8px 18px rgba(249,166,32,0.30);
+    margin-bottom: 4px;
+    transition: transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
+    animation: item-in 320ms var(--ease-spring) 90ms backwards;
   }
-  .next-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 0 var(--marigold-dark), 0 10px 22px rgba(249,166,32,0.40);
+  .next-btn .arrow { font-size: 2em; line-height: 1; transition: transform 250ms var(--ease-spring); }
+  @media (hover: hover) and (pointer: fine) {
+    .next-btn:hover { transform: translateY(-2px); }
+    .next-btn:hover .arrow { transform: translateX(4px); }
   }
-  .next-btn:active {
-    transform: translateY(2px);
-    box-shadow: 0 1px 0 var(--marigold-dark);
+  .next-btn:active { transform: translateY(3px) scale(0.97); box-shadow: 0 1px 0 var(--marigold-dark); transition-duration: 80ms; }
+
+  .toast {
+    position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+    background: var(--fern-dark); color: white; font-weight: 800; font-size: 0.9em;
+    padding: 8px 14px; border-radius: 100px; white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    opacity: 0; pointer-events: none;
+    transform: translate(-50%, -10px) scale(0.96);
+    transition: opacity 180ms ease, transform 180ms var(--ease-out);
   }
-  .info-line {
-    font-size: 0.85em; color: var(--fern);
-    margin-top: 8px; font-weight: 700;
+  .toast.show {
+    opacity: 1; transform: translate(-50%, 0) scale(1);
+    transition: opacity 250ms ease, transform 350ms var(--ease-spring);
   }
-  .info-line:empty { display: none; }
+
+  /* Compacter op kleine schermen */
+  @media (max-width: 600px) {
+    #app { padding: max(8px, env(safe-area-inset-top)) 10px max(8px, env(safe-area-inset-bottom)); }
+    h1 { font-size: 1.5em; margin: 2px 0 6px; }
+    .menu-btn { padding: 16px 12px; font-size: 1.05em; }
+    .menu-btn .emoji { font-size: 1.4em; }
+    .style-toggle button { padding: 8px 12px; font-size: 0.88em; }
+    .score, .streak { padding: 7px 11px; font-size: 0.88em; }
+    .back-btn { padding: 7px 13px; font-size: 1.05em; }
+    .back-btn .back-text { display: none; }
+    .question { font-size: 1.12em; }
+    .action-area { height: 104px; }
+    .answer-btn { font-size: 0.95em; border-radius: 12px; }
+    .feedback { font-size: 0.84em; padding: 6px 10px; }
+    .next-btn { width: 70px; }
+  }
+  @media (max-width: 380px) {
+    .lbl { display: none; }
+    .topbar { gap: 6px; }
+  }
+  /* Lage schermen (telefoon liggend) */
+  @media (max-height: 500px) {
+    #quiz { gap: 6px; }
+    .back-btn .back-text { display: none; }
+    .question { font-size: 1em; }
+    .action-area { height: 96px; }
+  }
 
   /* ============ KAART ============ */
   #map-container svg * { pointer-events: none; }
@@ -412,8 +451,11 @@
   .water {
     fill: var(--sea);
     stroke: none;
-    transition: fill 0.3s;
+    transition: fill 250ms ease, stroke 250ms ease;
   }
+  .waves { fill: url(#waves); }
+  .land-halo { fill: none; stroke: #e4f2f6; stroke-width: 7; stroke-linejoin: round; }
+  .land-shadow { fill: rgba(92, 74, 57, 0.16); }
   .water.marsh { fill: #aed3df; stroke: #6b8e9d; stroke-width: 0.6; stroke-dasharray: 2 2; }
   .neighbor { fill: #e6e0d4; stroke: #e6e0d4; stroke-width: 3; stroke-linejoin: round; }
   .country-label {
@@ -421,25 +463,45 @@
     fill: #a3978a; letter-spacing: 3px;
   }
   .province {
-    fill: #f3e7c9;
-    stroke: #8a6a4a;
+    fill: #f5eacd;
+    stroke: #a3825f;
     stroke-width: 0.7;
     stroke-linejoin: round;
-    transition: fill 0.3s;
+    transition: fill 250ms ease, stroke 250ms ease;
   }
   .river-link {
     fill: none; stroke: var(--teal); stroke-width: 1.4; opacity: 0.4;
     stroke-linecap: round; stroke-linejoin: round;
   }
+  .river-casing {
+    fill: none; stroke: #eef7f9; stroke-width: 4.6;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
   .river {
     fill: none;
-    stroke: var(--teal);
+    stroke: #4b8a8e;
     stroke-width: 2.4;
     stroke-linecap: round;
     stroke-linejoin: round;
-    opacity: 0.8;
-    transition: stroke 0.3s, stroke-width 0.3s;
+    transition: stroke 250ms ease, stroke-width 250ms var(--ease-out);
   }
+  /* Stromend water: OSM-lijnen lopen stroomafwaarts, dus de streepjes stromen mee */
+  .river-flow {
+    fill: none; stroke: rgba(255,255,255,0.85); stroke-width: 1.6;
+    stroke-linecap: round; stroke-dasharray: 2 7;
+    opacity: 0; transition: opacity 250ms ease;
+  }
+  .river-g.highlight .river-flow, .river-g.pick-right .river-flow, .river-g.reveal .river-flow {
+    opacity: 1; animation: flow 900ms linear infinite;
+  }
+  @keyframes flow { to { stroke-dashoffset: -9; } }
+  .river-glow {
+    fill: none; stroke: #fff6dc; stroke-width: 11;
+    stroke-linecap: round; stroke-linejoin: round;
+    opacity: 0; transition: opacity 250ms ease;
+  }
+  .river-g.highlight .river-glow, .river-g.pick-right .river-glow,
+  .river-g.reveal .river-glow, .river-g.pick-wrong .river-glow { opacity: 0.9; }
   .river-hit { fill: none; stroke: transparent; stroke-width: 16; stroke-linecap: round; stroke-linejoin: round; }
 
   /* Vraag: dit gebied licht op */
@@ -454,8 +516,23 @@
   .water.pick-wrong { fill: #d9785a; stroke: var(--terracotta-dk); stroke-width: 1.5; stroke-dasharray: none; }
   .river-g.pick-right .river, .river-g.reveal .river { stroke: var(--fern); stroke-width: 6; opacity: 1; }
   .river-g.pick-wrong .river { stroke: var(--terracotta); stroke-width: 6; opacity: 1; }
-  .reveal { animation: blink 0.9s ease-in-out 3; }
-  @keyframes blink { 50% { opacity: 0.35; } }
+  /* Effecten op de kaart: tik-rimpeling, sterretjes bij goed, ring bij 'hier is het' */
+  .fx { fill: none; pointer-events: none; transform-box: fill-box; transform-origin: center; }
+  .fx-ripple { stroke: white; stroke-width: 2.5; animation: ripple 420ms var(--ease-out) forwards; }
+  .fx-ripple.bad { stroke: var(--terracotta); }
+  .fx-ring { stroke: var(--fern); stroke-width: 3; animation: ring 1100ms var(--ease-out) 3 forwards; }
+  .fx-spark { fill: var(--marigold); stroke: white; stroke-width: 0.8; animation: spark 520ms var(--ease-out) forwards; }
+  @keyframes ripple { from { transform: scale(0.3); opacity: 0.9; } to { transform: scale(1.6); opacity: 0; } }
+  @keyframes ring { 0% { transform: scale(0.4); opacity: 0; } 20% { opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+  @keyframes spark {
+    0% { transform: translate(0, 0) scale(0.6); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(0.2); opacity: 0; }
+  }
+  .province.highlight, .province.pick-right, .province.reveal, .water.highlight {
+    animation: nudge 380ms var(--ease-spring);
+    transform-box: fill-box; transform-origin: center;
+  }
+  @keyframes nudge { 0% { transform: scale(0.97); } 60% { transform: scale(1.025); } 100% { transform: scale(1); } }
 
   /* Aanwijzen: alleen het soort gebied van de vraag is aantikbaar */
   #map-container .pick-province .province,
@@ -474,7 +551,7 @@
     fill: var(--terracotta);
     stroke: white;
     stroke-width: 1.8;
-    transition: r 0.3s, fill 0.3s;
+    transition: r 250ms var(--ease-spring), fill 250ms ease;
   }
   .city-hit { fill: transparent; }
   .city.highlight .city-dot { fill: var(--marigold-dark); r: 8; }
@@ -493,37 +570,59 @@
   #cities-group { display: none; }
   #cities-group.show-dots { display: inline; }
   #cities-group.show-dots .city-label { display: none; }
-  #cities-group.show-labels .city-label { display: inline; }
+  #cities-group.show-labels .city-label { display: inline; animation: fade-in 250ms ease both; }
+  @keyframes fade-in { from { opacity: 0; } }
 
   /* ============ RESULTATEN ============ */
   #results { display: none; padding: 30px 24px; text-align: center; flex: 1; overflow-y: auto; }
   #results h2 { font-size: 2em; margin-bottom: 8px; color: var(--fern); }
   #result-stars { font-size: 3em; letter-spacing: 6px; margin: 4px 0 8px; }
-  #result-stars span { display: inline-block; animation: pop 0.5s ease both; }
-  #result-stars span:nth-child(2) { animation-delay: 0.15s; }
-  #result-stars span:nth-child(3) { animation-delay: 0.3s; }
+  #result-stars span { display: inline-block; animation: star-in 600ms var(--ease-spring) 250ms both; }
+  #result-stars span:nth-child(2) { animation-delay: 430ms; font-size: 1.2em; }
+  #result-stars span:nth-child(3) { animation-delay: 610ms; }
   #result-stars .off { opacity: 0.25; filter: grayscale(1); }
+  @keyframes star-in {
+    0% { opacity: 0; transform: scale(0.4) rotate(-40deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0); }
+  }
+  #results > * { animation: item-in 380ms var(--ease-out) backwards; }
+  #results > :nth-child(3) { animation-delay: 450ms; }
+  #results > :nth-child(4) { animation-delay: 550ms; }
+  #results > :nth-child(5) { animation-delay: 650ms; }
   #result-text { font-family: 'Fraunces', serif; font-size: 1.4em; font-weight: 700; color: var(--ink); }
   #result-best { color: var(--fern-dark); font-weight: 800; margin-top: 8px; font-size: 1.1em; }
   .result-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
 
   /* ============ CONFETTI ============ */
   .confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 10; }
-  .confetti i {
-    position: absolute; top: -20px; width: 10px; height: 14px; border-radius: 2px;
-    animation: fall linear forwards;
-  }
-  @keyframes fall {
-    to { transform: translate(var(--drift), 110vh) rotate(var(--spin)); }
-  }
+  .confetti i { position: absolute; left: 50%; top: 38%; width: 9px; height: 13px; border-radius: 2px; }
+  .confetti i.round { border-radius: 50%; width: 9px; height: 9px; }
+
+  /* ============ SCHERMOVERGANGEN ============ */
+  #menu, #quiz.active, #results { animation: screen-in 320ms var(--ease-out) backwards; }
+  @keyframes screen-in { from { opacity: 0; transform: translateY(8px) scale(0.99); } }
+  #menu > * { animation: item-in 420ms var(--ease-out) backwards; }
+  #menu > :nth-child(2) { animation-delay: 40ms; }
+  #menu .menu-grid { animation: none; }
+  #menu .menu-btn { animation: item-in 420ms var(--ease-out) backwards; }
+  #menu .menu-btn:nth-child(1) { animation-delay: 80ms; }
+  #menu .menu-btn:nth-child(2) { animation-delay: 130ms; }
+  #menu .menu-btn:nth-child(3) { animation-delay: 180ms; }
+  #menu .menu-btn:nth-child(4) { animation-delay: 230ms; }
+  #menu .menu-btn:nth-child(5) { animation-delay: 280ms; }
+  #menu > :nth-child(n+4) { animation-delay: 320ms; }
+  h1 { animation: title-in 600ms var(--ease-out) both; }
+  @keyframes title-in { from { opacity: 0; transform: translateY(-6px); letter-spacing: 0.02em; } }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
-    .confetti { display: none; }
+    .confetti, .fx { display: none; }
+    .river-g .river-flow { animation: none !important; }
   }
 
   .sr-only {
@@ -538,9 +637,10 @@
 
   <div id="menu">
     <p class="menu-intro">Hoe wil je oefenen?</p>
-    <div class="style-toggle" role="group" aria-label="Manier van oefenen">
-      <button type="button" data-style="kies" onclick="setStyle('kies')">&#9997;&#65039; Kies het antwoord</button>
-      <button type="button" data-style="wijs" onclick="setStyle('wijs')">&#128070; Wijs aan op de kaart</button>
+    <div class="style-toggle no-anim" role="group" aria-label="Manier van oefenen">
+      <span class="toggle-pill" aria-hidden="true"></span>
+      <button type="button" data-style="kies" onclick="setStyle('kies')">&#9997;&#65039; <span class="long">Kies het antwoord</span><span class="short">Kiezen</span></button>
+      <button type="button" data-style="wijs" onclick="setStyle('wijs')">&#128070; <span class="long">Wijs aan op de kaart</span><span class="short">Aanwijzen</span></button>
     </div>
     <div class="menu-grid">
       <button class="menu-btn prov" onclick="startQuiz('provinces')">
@@ -571,29 +671,35 @@
 
   <div id="quiz">
     <div class="topbar">
-      <div class="topbar-left">
-        <div class="score">
-          <span aria-hidden="true">&#9989;</span> <span class="sr-only">Goed:</span><span class="good" id="score-good">0</span> &nbsp;
-          <span aria-hidden="true">&#10060;</span> <span class="sr-only">Fout:</span><span class="bad" id="score-bad">0</span> &nbsp;
-          <span aria-hidden="true">&#128203;</span> Nog: <span id="score-left">0</span>
-        </div>
-        <div class="streak" id="streak"></div>
+      <button class="back-btn" onclick="goMenu()" aria-label="Terug naar menu">&larr;<span class="back-text"> Terug naar menu</span></button>
+      <div class="score">
+        <span aria-hidden="true">&#9989;</span> <span class="sr-only">Goed:</span><span class="good" id="score-good">0</span> &nbsp;
+        <span aria-hidden="true">&#10060;</span> <span class="sr-only">Fout:</span><span class="bad" id="score-bad">0</span> &nbsp;
+        <span aria-hidden="true">&#128203;</span> <span class="lbl">Nog: </span><span id="score-left">0</span>
       </div>
-      <button class="back-btn" onclick="goMenu()">&larr; Terug naar menu</button>
+      <div class="streak" id="streak"></div>
     </div>
     <div class="progress" role="progressbar" aria-label="Voortgang" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
       <div class="progress-fill" id="progress-fill"></div>
     </div>
-    <div class="quiz-layout" id="quiz-layout">
+    <div class="quiz-layout">
       <div class="map-box">
         <div id="map-container"></div>
+        <div class="toast" id="toast" role="status"></div>
       </div>
       <div class="question-box">
-        <div class="question" id="question-text">...</div>
-        <div class="answers" id="answers"></div>
-        <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
-        <button class="next-btn" id="next-btn" onclick="nextQuestion()">Volgende &rarr;</button>
-        <div class="info-line" id="info-line"></div>
+        <div class="question"><span id="question-text"></span></div>
+        <div class="action-area">
+          <div class="answers" id="answers"></div>
+          <div class="point-hint"><span class="finger" aria-hidden="true">&#128070;</span>Tik op de kaart</div>
+          <div class="result">
+            <div class="feedback" id="feedback"></div>
+            <button class="next-btn" id="next-btn" onclick="nextQuestion()" aria-label="Volgende vraag">
+              <span class="arrow" aria-hidden="true">&rarr;</span><span aria-hidden="true">Volgende</span>
+            </button>
+          </div>
+        </div>
+        <div class="sr-only" id="sr-status" aria-live="polite"></div>
       </div>
     </div>
   </div>
@@ -689,17 +795,32 @@ function buildMap() {
   const seaWaters = ['noordzee', 'waddenzee', 'oosterschelde', 'westerschelde', 'ijsselmeer', 'markermeer'];
   return `
 <svg viewBox="${D.viewBox}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Kaart van Nederland">
+  <defs>
+    <clipPath id="map-clip"><rect width="${w}" height="${h}" rx="16"/></clipPath>
+    <pattern id="waves" width="26" height="16" patternUnits="userSpaceOnUse">
+      <path d="M2 5q2.5-2.5 5 0t5 0M15 13q2.5-2.5 5 0t5 0" fill="none" stroke="#fff" stroke-opacity="0.55" stroke-width="0.9" stroke-linecap="round"/>
+    </pattern>
+  </defs>
+  <g clip-path="url(#map-clip)">
   <rect class="sea-bg" width="${w}" height="${h}"/>
   <path class="inner-water" d="${D.innerWater}"/>
   ${seaWaters.map(id => `<path class="water" data-id="${id}" data-name="${nameOf(waters, id)}" d="${D.waters[id]}"/>`).join('')}
+  <rect class="waves" width="${w}" height="${h}"/>
+  <path class="land-halo" d="${D.land}"/>
   <path class="neighbor" d="${D.neighbors}"/>
+  <path class="land-shadow" d="${D.land}" transform="translate(0.8 2.2)"/>
   <text class="country-label" x="558" y="615">DUITSLAND</text>
   <text class="country-label" x="210" y="770">BELGI&#203;</text>
   ${provinces.map(p => `<path class="province" data-id="${p.id}" data-name="${p.name}" d="${D.provinces[p.id]}"/>`).join('')}
   <path class="water marsh" data-id="biesbosch" data-name="Biesbosch" d="${D.waters.biesbosch}"/>
   <path class="river-link" d="${D.riverLinks}"/>
+  <g>${rivers.map(r => `<path class="river-casing" d="${D.rivers[r.id]}"/>`).join('')}</g>
   ${rivers.map(r => `<g class="river-g" data-id="${r.id}" data-name="${r.name}">
-    <path class="river" d="${D.rivers[r.id]}"/><path class="river-hit" d="${D.rivers[r.id]}"/></g>`).join('')}
+    <path class="river-glow" d="${D.rivers[r.id]}"/>
+    <path class="river" d="${D.rivers[r.id]}"/>
+    <path class="river-flow" d="${D.rivers[r.id]}"/>
+    <path class="river-hit" d="${D.rivers[r.id]}"/></g>`).join('')}
+  <g id="fx-layer"></g>
   <g id="cities-group">
     ${provinces.map(p => {
       const [x, y] = D.cities[p.capital];
@@ -708,6 +829,7 @@ function buildMap() {
         <circle class="city-dot" cx="${x}" cy="${y}" r="5"/>
         <text class="city-label" x="${x + 8}" y="${y + 4}">${p.capital}</text></g>`;
     }).join('')}
+  </g>
   </g>
 </svg>`;
 }
@@ -761,6 +883,7 @@ function clearMap() {
   svgEl.querySelectorAll('[data-id], .city').forEach(el => el.classList.remove(...MAP_STATES));
   svgEl.classList.remove('pick-province', 'pick-city', 'pick-river', 'pick-water');
   citiesGroup.classList.remove('show-dots', 'show-labels');
+  document.getElementById('fx-layer').replaceChildren();
 }
 
 function featureEl(type, target) {
@@ -785,11 +908,23 @@ function setStyle(s) {
   document.querySelectorAll('.style-toggle button').forEach(b => {
     b.setAttribute('aria-pressed', b.dataset.style === s ? 'true' : 'false');
   });
+  placeTogglePill();
   $('menu-help').textContent = s === 'kies'
     ? 'Bij elke vraag licht er iets op de kaart op. Kies het juiste antwoord uit vier opties. Fout? Geen probleem, de vraag komt later in dezelfde ronde nog een keer terug!'
     : 'Je krijgt een naam en tikt op de juiste plek op de kaart. Fout? Dan zie je waar het wel ligt, en de vraag komt later in dezelfde ronde nog een keer terug!';
   renderBestScores();
 }
+
+function placeTogglePill() {
+  const btn = document.querySelector('.style-toggle button[aria-pressed="true"]');
+  const toggle = btn.parentElement;
+  if (!btn.offsetWidth) return;
+  toggle.style.setProperty('--pill-x', btn.offsetLeft + 'px');
+  toggle.style.setProperty('--pill-w', btn.offsetWidth + 'px');
+  requestAnimationFrame(() => toggle.classList.remove('no-anim'));
+}
+window.addEventListener('resize', placeTogglePill);
+document.fonts.ready.then(placeTogglePill);
 
 // =====================================================
 //  QUIZ FLOW
@@ -799,6 +934,7 @@ function startQuiz(m) {
   scoreGood = 0;
   scoreBad = 0;
   streak = 0;
+  lastPct = 0;
   wrongQueue = [];
   queue = shuffle(TOPIC_TYPES[m].flatMap(type => TYPES[type].list.map(item => ({ type, item }))));
   totalForRound = queue.length;
@@ -806,23 +942,22 @@ function startQuiz(m) {
   $('menu').style.display = 'none';
   $('results').style.display = 'none';
   $('quiz').classList.add('active');
-  $('quiz-layout').classList.toggle('point', style === 'wijs');
-  $('info-line').textContent = '';
+  $('quiz').classList.toggle('point', style === 'wijs');
+  $('app').classList.add('in-quiz');
   updateStreak();
   nextQuestion();
 }
 
 function nextQuestion() {
+  $('quiz').classList.remove('answered');
   $('feedback').className = 'feedback';
   $('feedback').textContent = '';
-  $('next-btn').style.display = 'none';
-  $('info-line').textContent = '';
 
   if (queue.length === 0) {
     if (wrongQueue.length > 0) {
       queue = shuffle(wrongQueue);
       wrongQueue = [];
-      $('info-line').textContent = '\u{1F501} Nu nog een keer de foute vragen!';
+      showToast('\u{1F501} Nu nog een keer de foute vragen!');
     } else {
       return endQuiz();
     }
@@ -839,7 +974,7 @@ function nextQuestion() {
 function renderChoiceQuestion() {
   const T = TYPES[current.type];
   const it = current.item;
-  $('question-text').textContent = T.choiceQ;
+  $('question-text').innerHTML = `<span class="q-anim">${escapeHtml(T.choiceQ)}</span>`;
   svgEl.querySelector(`[data-id="${it.id}"]`).classList.add('highlight');
 
   const aEl = $('answers');
@@ -850,7 +985,7 @@ function renderChoiceQuestion() {
     btn.className = 'answer-btn';
     btn.dataset.value = opt;
     btn.innerHTML = `<span class="key" aria-hidden="true">${i + 1}</span>${escapeHtml(opt)}`;
-    btn.onclick = () => handleChoice(btn, opt, correct);
+    btn.onclick = () => handleChoice(opt, correct);
     aEl.appendChild(btn);
   });
 }
@@ -858,33 +993,23 @@ function renderChoiceQuestion() {
 function renderPointQuestion() {
   const T = TYPES[current.type];
   const name = T.answer(current.item);
-  $('question-text').innerHTML = `${T.pointQ(current.item)} <span class="target">${escapeHtml(name)}</span>?`
-    + `<div class="point-hint">Tik op de kaart.</div>`;
+  $('question-text').innerHTML = `<span class="q-anim">${T.pointQ(current.item)} <span class="target">${escapeHtml(name)}</span>?</span>`;
   $('answers').innerHTML = '';
   svgEl.classList.add('pick-' + T.pick);
   if (T.pick === 'city') citiesGroup.classList.add('show-dots');
 }
 
-function handleChoice(btn, chosen, correct) {
+function handleChoice(chosen, correct) {
   if (answered) return;
   answered = true;
-  const buttons = document.querySelectorAll('.answer-btn');
-  buttons.forEach(b => b.disabled = true);
-
   const ok = chosen === correct;
-  if (ok) {
-    btn.classList.add('correct');
-  } else {
-    btn.classList.add('wrong');
-    buttons.forEach(b => { if (b.dataset.value === correct) b.classList.add('show-correct'); });
-  }
 
   // Bij hoofdsteden: toon nu alle steden + licht de juiste op
   if (current.type === 'capital') {
     citiesGroup.classList.add('show-dots', 'show-labels');
     featureEl('capital', correct).classList.add('highlight');
   }
-  finishAnswer(ok, ok ? '' : `Het juiste antwoord is <b>${escapeHtml(correct)}</b>.`);
+  finishAnswer(ok, `Jij koos ${escapeHtml(chosen)}. Het is <b>${escapeHtml(correct)}</b>.`);
 }
 
 function handleMapPick(e) {
@@ -901,26 +1026,69 @@ function handleMapPick(e) {
   const ok = chosen === target;
   svgEl.classList.remove('pick-' + T.pick);
 
+  const tap = svgPoint(e);
+  fxRipple(tap, !ok);
   let extra = '';
   if (ok) {
     el.classList.add('pick-right');
+    fxSparks(tap);
   } else {
     el.classList.add('pick-wrong');
     const right = featureEl(current.type, target);
     right.classList.add('reveal');
-    extra = `Jij tikte op <b>${escapeHtml(el.dataset.name)}</b> (rood). `
-      + `<b>${escapeHtml(T.answer(current.item))}</b> is groen gekleurd.`;
+    fxRing(right);
+    extra = `Dat is ${escapeHtml(el.dataset.name)} (rood). `
+      + `<b>${escapeHtml(T.answer(current.item))}</b> is groen.`;
   }
   if (T.pick === 'city') citiesGroup.classList.add('show-labels');
   finishAnswer(ok, extra);
 }
 svgEl.addEventListener('click', handleMapPick);
 
+// =====================================================
+//  KAARTEFFECTEN
+// =====================================================
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const fxLayer = document.getElementById('fx-layer');
+const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function svgPoint(e) {
+  return new DOMPoint(e.clientX, e.clientY).matrixTransform(svgEl.getScreenCTM().inverse());
+}
+function fxAdd(tag, attrs, life) {
+  const el = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  fxLayer.appendChild(el);
+  setTimeout(() => el.remove(), life);
+  return el;
+}
+function fxRipple(pt, bad) {
+  if (reduceMotion()) return;
+  fxAdd('circle', { class: 'fx fx-ripple' + (bad ? ' bad' : ''), cx: pt.x, cy: pt.y, r: 18 }, 500);
+}
+function fxSparks(pt) {
+  if (reduceMotion()) return;
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2 + Math.random() * 0.4;
+    const d = 22 + Math.random() * 14;
+    const spark = fxAdd('circle', { class: 'fx fx-spark', cx: pt.x, cy: pt.y, r: 2.6 + Math.random() * 1.6 }, 600);
+    spark.style.setProperty('--dx', (Math.cos(a) * d).toFixed(1) + 'px');
+    spark.style.setProperty('--dy', (Math.sin(a) * d).toFixed(1) + 'px');
+  }
+}
+// Ring rond het juiste antwoord: "hier ligt het"
+function fxRing(el) {
+  if (reduceMotion()) return;
+  const b = el.getBBox();
+  const r = Math.max(14, Math.min(60, Math.max(b.width, b.height) / 2 + 6));
+  fxAdd('circle', { class: 'fx fx-ring', cx: b.x + b.width / 2, cy: b.y + b.height / 2, r }, 3400);
+}
+
 // Rivieren en steden zijn klein: kies de dichtstbijzijnde binnen een ruime marge
 const PICK_RADIUS = { river: 22, city: 26 };
 let riverSamples = null;
 function nearestFeature(pick, e) {
-  const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(svgEl.getScreenCTM().inverse());
+  const pt = svgPoint(e);
   let best = null, bestD = PICK_RADIUS[pick];
   if (pick === 'city') {
     svgEl.querySelectorAll('.city').forEach(g => {
@@ -955,47 +1123,76 @@ function finishAnswer(ok, extraHtml) {
     scoreGood++;
     streak++;
     feedback.className = 'feedback good';
-    let html = '✅ <b>Goed zo!</b> ' + fact;
+    let html = '<span class="mark">\u2705</span> <b>Goed zo!</b> ' + fact;
     if (streak >= 5 && streak % 5 === 0) {
-      html += `<span class="streak-note">\u{1F525} Al ${streak} goed op rij!</span>`;
+      html += ` <span class="streak-note">\u{1F525} Al ${streak} goed op rij!</span>`;
     }
-    feedback.innerHTML = html;
+    feedback.innerHTML = `<div>${html}</div>`;
   } else {
     scoreBad++;
     streak = 0;
     wrongQueue.push(current);
     feedback.className = 'feedback bad';
-    feedback.innerHTML = '❌ <b>Helaas!</b> ' + extraHtml + '<br>' + fact;
+    feedback.innerHTML = `<div><span class="mark">\u274C</span> ${extraHtml} ${fact}</div>`;
   }
+  $('sr-status').textContent = feedback.textContent;
 
   updateScore();
   updateStreak();
-  const next = $('next-btn');
-  next.style.display = 'block';
-  next.focus({ preventScroll: true });
+  $('quiz').classList.add('answered');
+  $('next-btn').focus({ preventScroll: true });
 }
 
+let toastTimer = null;
+function showToast(text) {
+  const t = $('toast');
+  t.textContent = text;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+function setCount(id, value) {
+  const el = $(id);
+  const changed = el.textContent !== String(value);
+  el.textContent = value;
+  if (changed && answered) {
+    el.classList.remove('bump');
+    void el.offsetWidth;
+    el.classList.add('bump');
+  }
+}
+
+let lastPct = 0;
 function updateScore() {
   const left = queue.length + wrongQueue.length;
-  $('score-good').textContent = scoreGood;
-  $('score-bad').textContent = scoreBad;
+  setCount('score-good', scoreGood);
+  setCount('score-bad', scoreBad);
   $('score-left').textContent = left;
   // Voortgang = aantal onderdelen dat al goed is beantwoord
   const remaining = left + (answered ? 0 : 1);
   const pct = totalForRound ? Math.round(((totalForRound - remaining) / totalForRound) * 100) : 0;
-  $('progress-fill').style.width = pct + '%';
+  const fill = $('progress-fill');
+  fill.style.width = pct + '%';
+  if (pct > lastPct) {
+    fill.classList.remove('shine');
+    void fill.offsetWidth;
+    fill.classList.add('shine');
+  }
+  lastPct = pct;
   document.querySelector('.progress').setAttribute('aria-valuenow', pct);
 }
 
 function updateStreak() {
   const el = $('streak');
   const show = streak >= 3;
-  if (show) el.textContent = `\u{1F525} ${streak} op rij`;
+  if (show) el.innerHTML = `\u{1F525} ${streak}<span class="lbl"> op rij</span>`;
   if (show !== el.classList.contains('show')) el.classList.toggle('show', show);
 }
 
 function endQuiz() {
   $('quiz').classList.remove('active');
+  $('app').classList.remove('in-quiz');
   $('results').style.display = 'block';
   const total = scoreGood + scoreBad;
   const pct = total > 0 ? Math.round((scoreGood / total) * 100) : 0;
@@ -1020,6 +1217,7 @@ function goMenu() {
   clearMap();
   current = null;
   $('quiz').classList.remove('active');
+  $('app').classList.remove('in-quiz');
   $('results').style.display = 'none';
   $('menu').style.display = 'block';
   renderBestScores();
@@ -1029,22 +1227,36 @@ function goMenu() {
 //  CONFETTI
 // =====================================================
 function launchConfetti() {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (reduceMotion()) return;
   const box = document.createElement('div');
   box.className = 'confetti';
-  const colors = ['#b7472a', '#f9a620', '#4a7c59', '#3a6b6e', '#ffd54f', '#6b9b78'];
-  for (let i = 0; i < 90; i++) {
-    const c = document.createElement('i');
-    c.style.left = Math.random() * 100 + 'vw';
-    c.style.background = colors[i % colors.length];
-    c.style.setProperty('--drift', (Math.random() * 200 - 100) + 'px');
-    c.style.setProperty('--spin', (Math.random() * 1080 - 540) + 'deg');
-    c.style.animationDuration = (2.2 + Math.random() * 1.8) + 's';
-    c.style.animationDelay = Math.random() * 0.6 + 's';
-    box.appendChild(c);
-  }
   document.body.appendChild(box);
-  setTimeout(() => box.remove(), 5000);
+  const colors = ['#b7472a', '#f9a620', '#4a7c59', '#3a6b6e', '#ffd54f', '#6b9b78', '#e8816a'];
+  const H = window.innerHeight, W = window.innerWidth;
+  for (let i = 0; i < 110; i++) {
+    const c = document.createElement('i');
+    if (i % 3 === 0) c.className = 'round';
+    c.style.background = colors[i % colors.length];
+    box.appendChild(c);
+    // Uitbarsting omhoog, daarna vallen met zwaartekracht en wat wiebelen
+    const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.9;
+    const speed = (0.55 + Math.random() * 0.6) * Math.min(W, 700);
+    const vx = Math.cos(angle) * speed, vy = Math.sin(angle) * speed;
+    const g = H * 1.6, spin = (Math.random() - 0.5) * 1440, sway = 20 + Math.random() * 30;
+    const dur = 2200 + Math.random() * 1400;
+    const frames = [];
+    for (let k = 0; k <= 12; k++) {
+      const t = (k / 12) * (dur / 1000);
+      const x = vx * t * 0.55 + Math.sin(t * 6 + i) * sway;
+      const y = vy * t + 0.5 * g * t * t;
+      frames.push({
+        transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${(spin * k / 12).toFixed(0)}deg) rotateX(${(k * 70) % 360}deg)`,
+        opacity: k > 9 ? 1 - (k - 9) / 3 : 1,
+      });
+    }
+    c.animate(frames, { duration: dur, delay: Math.random() * 150, easing: 'linear', fill: 'both' });
+  }
+  setTimeout(() => box.remove(), 4000);
 }
 
 // =====================================================

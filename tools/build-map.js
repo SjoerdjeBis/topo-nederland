@@ -100,6 +100,8 @@ const land = lj.features ? lj.features[0] : turf.feature(lj.geometries ? lj.geom
 const provIds = { 'Groningen': 'groningen', 'Fryslân': 'friesland', 'Drenthe': 'drenthe', 'Overijssel': 'overijssel', 'Flevoland': 'flevoland', 'Gelderland': 'gelderland', 'Utrecht': 'utrecht', 'Noord-Holland': 'noord-holland', 'Zuid-Holland': 'zuid-holland', 'Zeeland': 'zeeland', 'Noord-Brabant': 'noord-brabant', 'Limburg': 'limburg' };
 const out = { viewBox: `0 0 ${W} ${H}`, provinces: {}, waters: {}, rivers: {}, cities: {}, neighbors: '' };
 for (const f of prov.features) out.provinces[provIds[f.properties.statnaam]] = geomPath(f.geometry, 0.3);
+// Omtrek van heel Nederland, voor kustrand en schaduw
+out.land = geomPath(land.geometry, 0.5);
 
 
 // ---------- Buurlanden (Natural Earth), geclipt op viewport
@@ -156,9 +158,40 @@ out.innerWater = parts.slice(1).filter(p => pArea(p) > 300000 && nbShare(p) < 0.
 // ---------- Rivieren (OSM-lijnen)
 const og = ['osm.json', 'osm3.json', 'osm5.json'].flatMap(f => osm2g(read(f)).features);
 const riverNames = { maas: ['Maas', 'Bergsche Maas'], waal: ['Waal'], nederrijn: ['Nederrijn'], lek: ['Lek'], ijssel: ['IJssel'], noordzeekanaal: ['Noordzeekanaal'], 'amsterdam-rijnkanaal': ['Amsterdam-Rijnkanaal'], 'nieuwe-waterweg': ['Nieuwe Waterweg', 'Scheur'] };
+// Alleen het grootste aaneengesloten stuk houden: OSM kent ook sloten die 'Waal' heten
+function mainNetwork(lines) {
+  const key = p => p.map(v => Math.round(v)).join(',');
+  const parent = lines.map((_, i) => i);
+  const find = i => parent[i] === i ? i : (parent[i] = find(parent[i]));
+  const byVertex = new Map();
+  lines.forEach((l, i) => l.forEach(p => {
+    const k = key(p);
+    if (!byVertex.has(k)) byVertex.set(k, []);
+    byVertex.get(k).push(i);
+  }));
+  for (const ids of byVertex.values()) for (const j of ids) parent[find(j)] = find(ids[0]);
+  const len = l => l.slice(1).reduce((a, p, j) => a + Math.hypot(p[0] - l[j][0], p[1] - l[j][1]), 0);
+  const total = new Map();
+  lines.forEach((l, i) => total.set(find(i), (total.get(find(i)) || 0) + len(l)));
+  const best = [...total.entries()].sort((a, b) => b[1] - a[1])[0][0];
+  // Stukken die door een sluis of brug los liggen, maar dichtbij, horen er ook bij
+  const keep = new Set([best]);
+  const near = (a, b) => a.some(p => b.some(q => Math.hypot(p[0] - q[0], p[1] - q[1]) < 1000));
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const root of total.keys()) {
+      if (keep.has(root)) continue;
+      const mine = lines.filter((_, i) => find(i) === root).flat();
+      const kept = lines.filter((_, i) => keep.has(find(i))).flat();
+      if (near(mine, kept)) { keep.add(root); grew = true; }
+    }
+  }
+  return lines.filter((_, i) => keep.has(find(i)));
+}
 for (const [k, names] of Object.entries(riverNames)) {
   const lines = og.filter(f => f.id.startsWith('way/') && names.includes(f.properties.name) && f.geometry.type === 'LineString').map(toRD);
-  const ml = { type: 'MultiLineString', coordinates: lines.map(l => l.geometry.coordinates) };
+  const ml = { type: 'MultiLineString', coordinates: mainNetwork(lines.map(l => l.geometry.coordinates)) };
   out.rivers[k] = geomPath(ml, 0.5);
 }
 
