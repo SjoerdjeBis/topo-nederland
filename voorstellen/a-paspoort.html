@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Voorstel A · Reispaspoort</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cover:   #5b1626;
+    --cover-2: #451020;
+    --foil:    #d9b45f;
+    --paper:   #e8efe5;
+    --paper-2: #dbe5d8;
+    --line:    #b5cabb;
+    --ink:     #1d2433;
+    --ink-soft:#56607a;
+    --blue:    #2a4fa8;
+    --red:     #c2362b;
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-variation-settings: 'wdth' 100;
+    color: var(--ink);
+    background: #2a2f3a;
+    display: flex; align-items: center; justify-content: center; gap: 40px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+
+  /* ---------- toelichting naast het toestel (alleen desktop) ---------- */
+  .notes { width: 340px; color: #d9dde6; font-size: 15px; line-height: 1.5; }
+  .notes h1 { font-size: 30px; font-variation-settings: 'wdth' 118; font-weight: 900; margin: 0 0 4px; color: var(--foil); letter-spacing: -0.01em; }
+  .notes .tag { font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #8d96a8; }
+  .notes h3 { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--foil); margin: 22px 0 6px; }
+  .notes ul { margin: 0; padding-left: 18px; }
+  .notes li { margin: 3px 0; }
+  .switch { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
+  .switch button { font: 600 13px 'Archivo', sans-serif; padding: 8px 12px; border-radius: 999px; border: 1px solid #4a5263; background: transparent; color: #d9dde6; cursor: pointer; transition: background-color 150ms ease, transform 120ms ease-out; }
+  .switch button[aria-pressed="true"] { background: var(--foil); color: var(--cover-2); border-color: var(--foil); }
+  .switch button:active { transform: scale(0.96); }
+  @media (max-width: 860px) { .notes { display: none; } body { background: var(--paper); } }
+
+  /* ---------- toestel ---------- */
+  .device {
+    position: relative; width: 400px; height: 820px; max-height: 96vh;
+    border-radius: 44px; overflow: hidden;
+    background: var(--paper);
+    box-shadow: 0 0 0 10px #12151c, 0 30px 80px rgba(0,0,0,.5);
+  }
+  @media (max-width: 860px) { .device { width: 100%; height: 100dvh; max-height: none; border-radius: 0; box-shadow: none; } }
+
+  /* veiligheidspapier: fijne guilloche-lijnen */
+  .paper {
+    background-color: var(--paper);
+    background-image:
+      repeating-radial-gradient(circle at 120% -20%, transparent 0 9px, rgba(42,79,168,.06) 9px 10px),
+      repeating-radial-gradient(circle at -20% 120%, transparent 0 11px, rgba(194,54,43,.045) 11px 12px);
+  }
+  .screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow-y: auto; scrollbar-width: none; }
+  .screen[hidden] { display: none; }
+
+  /* ================= START: paspoort ================= */
+  .cover-wrap { position: absolute; inset: 0; perspective: 1400px; z-index: 20; pointer-events: none; }
+  .cover {
+    position: absolute; inset: 0; transform-origin: left center;
+    background: radial-gradient(ellipse at 30% 20%, #6f1c30, var(--cover) 50%, var(--cover-2));
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+    color: var(--foil); backface-visibility: hidden;
+    animation: cover-open 1100ms var(--ease-in-out) 500ms forwards;
+  }
+  .cover .t1 { font-size: 15px; letter-spacing: .32em; font-weight: 700; }
+  .cover .t2 { font-size: 44px; font-weight: 900; font-variation-settings: 'wdth' 125; letter-spacing: .02em; }
+  .cover svg { width: 130px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.4)); }
+  .cover svg path { fill: none; stroke: var(--foil); stroke-width: 6; }
+  @keyframes cover-open { to { transform: rotateY(-105deg); opacity: 0; } }
+
+  .home { padding: 54px 20px 28px; }
+  .holder {
+    position: relative; border-radius: 18px; padding: 16px 16px 0; overflow: hidden;
+    background: #f6f9f4; border: 1px solid var(--line);
+    box-shadow: 0 1px 0 #fff inset, 0 8px 24px -12px rgba(29,36,51,.3);
+  }
+  .holder .row { display: flex; gap: 14px; }
+  .photo { width: 78px; height: 96px; border-radius: 8px; background: var(--paper-2); display: grid; place-items: center; font-size: 40px; border: 1px solid var(--line); }
+  .field { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
+  .val { font-weight: 800; font-size: 18px; margin-bottom: 6px; font-variation-settings: 'wdth' 110; }
+  .mrz { margin: 14px -16px 0; padding: 10px 16px; background: var(--paper-2); font-size: 12.5px; letter-spacing: .08em; line-height: 1.45; color: #3b4458; white-space: nowrap; overflow: hidden; }
+
+  .next-stamp { margin: 22px 0 10px; display: flex; align-items: center; gap: 14px; }
+  .next-stamp .ring { --p: .7; width: 62px; height: 62px; border-radius: 50%; flex-shrink: 0;
+    background: conic-gradient(var(--red) calc(var(--p) * 1turn), rgba(194,54,43,.14) 0);
+    display: grid; place-items: center; }
+  .next-stamp .ring span { width: 48px; height: 48px; border-radius: 50%; background: var(--paper); display: grid; place-items: center; font-weight: 900; font-size: 18px; color: var(--red); }
+  .next-stamp p { margin: 0; font-size: 15px; line-height: 1.35; }
+  .next-stamp b { font-variation-settings: 'wdth' 110; }
+
+  .section-label { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-soft); margin: 22px 2px 10px; font-weight: 700; }
+  /* toetsen als reistickets met perforatie */
+  .ticket {
+    display: flex; width: 100%; text-align: left; margin-bottom: 12px; padding: 0; border: 0; cursor: pointer; font: inherit; color: inherit;
+    filter: drop-shadow(0 6px 10px rgba(29,36,51,.12));
+    transition: transform 160ms var(--ease-out);
+    animation: rise 500ms var(--ease-out) backwards;
+  }
+  .ticket:nth-of-type(2) { animation-delay: 60ms; }
+  .ticket:active { transform: scale(0.98); }
+  .ticket .main { flex: 1; background: #fff; border-radius: 14px 0 0 14px; padding: 14px 16px; display: flex; gap: 14px; align-items: center;
+    -webkit-mask: radial-gradient(circle at 100% 0, transparent 9px, #000 9.5px) top / 100% 51% no-repeat, radial-gradient(circle at 100% 100%, transparent 9px, #000 9.5px) bottom / 100% 51% no-repeat; }
+  .ticket .stub { width: 86px; background: var(--blue); color: #fff; border-radius: 0 14px 14px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    border-left: 2px dashed rgba(255,255,255,.5);
+    -webkit-mask: radial-gradient(circle at 0 0, transparent 9px, #000 9.5px) top / 100% 51% no-repeat, radial-gradient(circle at 0 100%, transparent 9px, #000 9.5px) bottom / 100% 51% no-repeat; }
+  .ticket .stub b { font-size: 22px; font-variation-settings: 'wdth' 120; font-weight: 900; }
+  .ticket .stub small { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; opacity: .85; }
+  .ticket svg.mini { width: 46px; height: 54px; flex-shrink: 0; }
+  .ticket svg.mini path { fill: #9fb3a6; stroke: #fff; stroke-width: 7; stroke-linejoin: round; }
+  .ticket svg.mini path.hl { fill: var(--red); }
+  .ticket h4 { margin: 0 0 2px; font-size: 19px; font-weight: 900; font-variation-settings: 'wdth' 112; }
+  .ticket .sub { font-size: 13px; color: var(--ink-soft); }
+  .stamps-btn {
+    width: 100%; margin-top: 8px; padding: 16px; border-radius: 16px; border: 0; cursor: pointer;
+    background: var(--cover); color: var(--foil); font: 800 16px 'Archivo'; font-variation-settings: 'wdth' 115; letter-spacing: .04em;
+    display: flex; align-items: center; justify-content: space-between;
+    transition: transform 160ms var(--ease-out);
+  }
+  .stamps-btn:active { transform: scale(0.98); }
+  .stamps-btn .flags { display: flex; }
+  .stamps-btn .flags svg { width: 26px; height: 18px; border-radius: 3px; margin-left: -6px; box-shadow: 0 0 0 2px var(--cover); }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+
+  /* ================= TOETS ================= */
+  .quiz { padding: 50px 16px 20px; gap: 12px; }
+  .qtop { display: flex; align-items: center; gap: 10px; }
+  .icon-btn { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: #f6f9f4; font-size: 18px; cursor: pointer; color: var(--ink); }
+  /* strippenkaart: 10 gaatjes, elk goed antwoord knipt er één */
+  .strip { flex: 1; display: flex; align-items: center; gap: 4px; background: var(--blue); border-radius: 10px; padding: 8px 10px; }
+  .strip .lbl { color: #fff; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; margin-right: 4px; line-height: 1.1; }
+  .hole { width: 15px; height: 15px; border-radius: 50%; background: rgba(255,255,255,.22); position: relative; }
+  .hole.punched { background: var(--paper); box-shadow: inset 0 2px 3px rgba(0,0,0,.35); animation: punch 260ms var(--ease-out); }
+  @keyframes punch { 0% { transform: scale(1.5); } 100% { transform: scale(1); } }
+  .mapcard { position: relative; flex: 1; min-height: 0; border-radius: 22px; background: #f6f9f4; border: 1px solid var(--line); overflow: hidden; }
+  .mapcard svg { width: 100%; height: 100%; display: block; }
+  .mapcard .sea { fill: url(#gl); }
+  .mapcard .prov { fill: #fbfcfa; stroke: #8aa597; stroke-width: 1.4; stroke-linejoin: round; transition: fill 300ms ease; }
+  .mapcard .prov.target { fill: var(--red); animation: target-pulse 1.6s ease-in-out infinite; }
+  .mapcard .prov.ok { fill: #3f8f5e; animation: none; }
+  @keyframes target-pulse { 50% { fill: #d9564b; } }
+  .postmark { position: absolute; right: 14px; top: 14px; width: 74px; height: 74px; border: 2px solid rgba(42,79,168,.35); border-radius: 50%; display: grid; place-items: center; text-align: center; font-size: 8.5px; letter-spacing: .14em; color: rgba(42,79,168,.6); font-weight: 700; transform: rotate(12deg); }
+  .q { font-size: 21px; font-weight: 800; font-variation-settings: 'wdth' 108; margin: 4px 2px 0; }
+  .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .ans { padding: 15px 12px; border-radius: 14px; border: 1px solid var(--line); background: #fff; font: 700 16px 'Archivo'; color: var(--ink); text-align: left; cursor: pointer; display: flex; gap: 9px; align-items: center;
+    box-shadow: 0 3px 0 var(--line); transition: transform 120ms var(--ease-out), box-shadow 120ms var(--ease-out), background-color 200ms ease; }
+  .ans .k { font: 600 11px 'IBM Plex Mono'; width: 20px; height: 20px; border-radius: 6px; background: var(--paper-2); display: grid; place-items: center; color: var(--ink-soft); }
+  .ans:active { transform: translateY(3px); box-shadow: 0 0 0 var(--line); }
+  .ans.good { background: #3f8f5e; color: #fff; border-color: #3f8f5e; box-shadow: 0 3px 0 #2c6a44; }
+  .ans.bad { background: var(--red); color: #fff; border-color: var(--red); box-shadow: 0 3px 0 #8f251d; animation: shake 300ms ease; }
+  @keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+  /* ================= BELONING: stempel ================= */
+  .reward { position: absolute; inset: 0; z-index: 30; display: flex; align-items: flex-end; background: rgba(29,36,51,0); transition: background-color 300ms ease; }
+  .reward[hidden] { display: none; }
+  .reward.show { background: rgba(29,36,51,.55); }
+  .page {
+    width: 100%; height: 84%; border-radius: 30px 30px 0 0; padding: 26px 22px; position: relative;
+    transform: translateY(100%); transition: transform 520ms var(--ease-drawer);
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+  }
+  .reward.show .page { transform: translateY(0); }
+  .page .field { margin-top: 6px; }
+  .page h2 { margin: 2px 0 0; font-size: 30px; font-weight: 900; font-variation-settings: 'wdth' 120; letter-spacing: -0.01em; }
+  .stamp-zone { position: relative; flex: 1; width: 100%; display: grid; place-items: center; }
+  .stamp {
+    position: relative; width: 230px; height: 230px; display: grid; place-items: center;
+    opacity: 0; transform: scale(1.9) rotate(-2deg);
+  }
+  .stamp.slam { animation: slam 420ms cubic-bezier(.5,0,.75,0) forwards, settle 260ms var(--ease-out) 420ms forwards; }
+  @keyframes slam { to { opacity: 1; transform: scale(.94) rotate(-9deg); } }
+  @keyframes settle { from { opacity: 1; transform: scale(.94) rotate(-9deg); } to { opacity: 1; transform: scale(1) rotate(-9deg); } }
+  .stamp .ring-outer { position: absolute; inset: 0; border-radius: 50%; border: 5px solid var(--blue); }
+  .stamp .ring-inner { position: absolute; inset: 14px; border-radius: 50%; border: 2px solid var(--blue); }
+  .stamp svg.arc { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .stamp svg.arc text { font: 800 15px 'Archivo'; letter-spacing: .3em; fill: var(--blue); }
+  .stamp .flag { width: 120px; height: 80px; border-radius: 5px; overflow: hidden; box-shadow: 0 0 0 3px var(--blue); filter: saturate(.92) contrast(1.02); }
+  .stamp .flag svg { width: 100%; height: 100%; display: block; }
+  /* inkt: grove textuur over de stempel */
+  .stamp::after { content: ''; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle, var(--paper) 0 1.1px, transparent 1.6px) 0 0 / 13px 11px,
+                radial-gradient(circle, var(--paper) 0 .8px, transparent 1.3px) 5px 7px / 17px 19px; opacity: .55; mix-blend-mode: normal; }
+  .splat { position: absolute; width: 230px; height: 230px; border-radius: 50%; border: 2px solid var(--blue); opacity: 0; }
+  .splat.go { animation: splat 600ms var(--ease-out) 400ms; }
+  @keyframes splat { from { opacity: .5; transform: scale(1); } to { opacity: 0; transform: scale(1.5); } }
+  .device.thud { animation: thud 220ms ease 410ms; }
+  @keyframes thud { 30% { transform: translateY(3px); } 60% { transform: translateY(-1px); } }
+  .visa-meta { font-size: 12.5px; letter-spacing: .08em; color: var(--ink-soft); opacity: 0; transition: opacity 300ms ease 900ms; }
+  .reward.show .visa-meta { opacity: 1; }
+  .fact { margin: 10px 0 18px; font-size: 15px; line-height: 1.4; max-width: 300px; opacity: 0; transform: translateY(6px); transition: opacity 300ms ease 1000ms, transform 300ms var(--ease-out) 1000ms; }
+  .reward.show .fact { opacity: 1; transform: none; }
+  .primary { width: 100%; padding: 17px; border: 0; border-radius: 16px; background: var(--cover); color: var(--foil); font: 800 17px 'Archivo'; font-variation-settings: 'wdth' 115; letter-spacing: .03em; cursor: pointer; transition: transform 160ms var(--ease-out); }
+  .primary:active { transform: scale(0.97); }
+
+  /* ================= VERZAMELING ================= */
+  .book { padding: 0 0 24px; background: var(--cover); }
+  .book-head { padding: 52px 20px 18px; color: var(--foil); display: flex; align-items: flex-end; justify-content: space-between; }
+  .book-head h2 { margin: 0; font-size: 28px; font-weight: 900; font-variation-settings: 'wdth' 122; }
+  .book-head .count { font: 600 13px 'IBM Plex Mono'; color: #e9cf96; text-align: right; }
+  .tabs { display: flex; gap: 6px; padding: 0 16px 14px; overflow-x: auto; scrollbar-width: none; }
+  .tabs button { flex-shrink: 0; font: 700 13px 'Archivo'; padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(217,180,95,.4); background: transparent; color: var(--foil); cursor: pointer; }
+  .tabs button[aria-pressed="true"] { background: var(--foil); color: var(--cover-2); }
+  .spread { margin: 0 12px; border-radius: 16px; padding: 18px 14px 40px; min-height: 560px; position: relative;
+    box-shadow: inset 0 0 0 1px var(--line), 0 10px 30px rgba(0,0,0,.3); }
+  .spread .pg { position: absolute; bottom: 8px; left: 0; right: 0; text-align: center; font: 600 11px 'IBM Plex Mono'; color: var(--ink-soft); }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px 8px; }
+  .slot { aspect-ratio: 1; position: relative; display: grid; place-items: center; border: 0; background: none; cursor: pointer; padding: 0; }
+  .slot.empty { border-radius: 50%; border: 2px dashed var(--line); color: var(--line); font: 800 26px 'Archivo'; cursor: default; }
+  .mini-stamp { width: 92%; aspect-ratio: 1; border-radius: 50%; border: 3px solid var(--c, var(--blue)); display: grid; place-items: center; position: relative; transition: transform 160ms var(--ease-out); animation: rise 420ms var(--ease-out) backwards; }
+  .slot:active .mini-stamp { transform: scale(0.95) rotate(var(--r)); }
+  .mini-stamp { transform: rotate(var(--r)); }
+  .mini-stamp .f { width: 56%; aspect-ratio: 3/2; border-radius: 3px; overflow: hidden; box-shadow: 0 0 0 2px var(--c, var(--blue)); }
+  .mini-stamp .f svg { width: 100%; height: 100%; display: block; }
+  .mini-stamp .n { position: absolute; bottom: 9%; font-size: 8.5px; letter-spacing: .12em; font-weight: 800; color: var(--c, var(--blue)); text-transform: uppercase; }
+  .mini-stamp.square { border-radius: 10px; }
+  .mini-stamp.oct { border-radius: 30%; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; transition-duration: 1ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<aside class="notes">
+  <div class="tag">Voorstel A</div>
+  <h1>Reispaspoort</h1>
+  <p>De site wordt je paspoort. Elke toets is een reis, en elke 10 goede antwoorden levert een <b>stempel met de vlag van een land</b> op. Je paspoort vult zich vanzelf: eerst de buurlanden, daarna steeds verder weg.</p>
+  <h3>Zo werkt de beloning</h3>
+  <ul>
+    <li>10 goed = 1 stempel. Telt door over alle toetsen heen, fouten nemen niets af.</li>
+    <li>Bovenin de toets zit een strippenkaart: elk goed antwoord knipt een gaatje.</li>
+    <li>Volgorde is een reisroute: België, Duitsland, Frankrijk … tot Nieuw-Zeeland.</li>
+    <li>Bij elke stempel één weetje over dat land (hoofdstad, taal).</li>
+  </ul>
+  <h3>Stijl &amp; beweging</h3>
+  <ul>
+    <li>Bordeaux kaft met goudfolie, groen veiligheidspapier met guilloche-lijnen.</li>
+    <li>Archivo in brede breedtes voor koppen, mono voor “paspoortgegevens”.</li>
+    <li>Kaft klapt open bij het starten, stempel slaat neer met een kleine dreun.</li>
+  </ul>
+  <div class="switch" role="group" aria-label="Scherm">
+    <button data-go="home" aria-pressed="true">Start</button>
+    <button data-go="quiz" aria-pressed="false">Toets</button>
+    <button data-go="reward" aria-pressed="false">Stempel winnen</button>
+    <button data-go="book" aria-pressed="false">Mijn paspoort</button>
+  </div>
+  <p style="font-size:13px;color:#8d96a8;margin-top:14px">Tip: in “Toets” staat de teller op 8 van 10. Beantwoord er twee goed en de stempel valt vanzelf.</p>
+</aside>
+
+<div class="device" id="device">
+  <!-- START -->
+  <section class="screen paper" id="home">
+    <div class="cover-wrap" id="cover-wrap">
+      <div class="cover">
+        <div class="t1">KONINKRIJK DER TOPO</div>
+        <svg viewBox="0 0 685 805" id="cover-nl"></svg>
+        <div class="t2">PASPOORT</div>
+      </div>
+    </div>
+    <div class="home">
+      <div class="holder">
+        <div class="row">
+          <div class="photo" aria-hidden="true">🧭</div>
+          <div>
+            <div class="field">Houder</div><div class="val">Topo-reiziger</div>
+            <div class="field">Stempels</div><div class="val">7 van 35</div>
+            <div class="field">Laatste land</div><div class="val">Zwitserland</div>
+          </div>
+        </div>
+        <div class="mrz mono">P&lt;NLDTOPO&lt;&lt;REIZIGER&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;<br>0007BE&lt;DE&lt;FR&lt;IT&lt;IE&lt;AT&lt;CH&lt;&lt;&lt;&lt;&lt;&lt;&lt;</div>
+      </div>
+
+      <div class="next-stamp">
+        <div class="ring" style="--p:.7"><span>7</span></div>
+        <p><b>Nog 3 goed</b> tot je volgende stempel.<br><span style="color:var(--ink-soft)">Volgende bestemming: Polen</span></p>
+      </div>
+
+      <div class="section-label">Kies je reis</div>
+      <button class="ticket" data-go="quiz">
+        <span class="main"><svg class="mini" viewBox="0 0 685 805" id="mini-nl"></svg><span><h4>Heel Nederland</h4><span class="sub">Provincies, steden, rivieren, water</span></span></span>
+        <span class="stub"><small>Beste</small><b>92%</b></span>
+      </button>
+      <button class="ticket" data-go="quiz">
+        <span class="main"><svg class="mini" viewBox="0 0 685 805" id="mini-noord"></svg><span><h4>Noord-Nederland</h4><span class="sub">Groningen, Friesland, Drenthe</span></span></span>
+        <span class="stub" style="background:var(--red)"><small>Nieuw</small><b>–</b></span>
+      </button>
+      <button class="stamps-btn" data-go="book">Mijn paspoort <span class="flags" id="btn-flags"></span></button>
+    </div>
+  </section>
+
+  <!-- TOETS -->
+  <section class="screen paper quiz" id="quiz" hidden>
+    <div class="qtop">
+      <button class="icon-btn" data-go="home" aria-label="Terug">←</button>
+      <div class="strip" aria-label="Strippenkaart: 8 van 10"><span class="lbl">Naar<br>stempel</span><span id="holes" style="display:flex;gap:4px"></span></div>
+    </div>
+    <div class="mapcard">
+      <svg viewBox="-20 -20 725 845" id="quiz-map">
+        <defs><pattern id="gl" width="14" height="14" patternUnits="userSpaceOnUse"><rect width="14" height="14" fill="#e3ece6"/><path d="M0 7 Q3.5 3 7 7 T14 7" fill="none" stroke="#c9dccf" stroke-width="1.2"/></pattern></defs>
+        <rect class="sea" x="-20" y="-20" width="725" height="845"/>
+      </svg>
+      <div class="postmark">NL<br>· TOPO ·<br>2026</div>
+    </div>
+    <div class="q" id="q">Welke provincie is rood?</div>
+    <div class="answers" id="answers"></div>
+  </section>
+
+  <!-- VERZAMELING -->
+  <section class="screen book" id="book" hidden>
+    <div class="book-head">
+      <div><button class="icon-btn" data-go="home" aria-label="Terug" style="background:transparent;color:var(--foil);border-color:rgba(217,180,95,.4);margin-bottom:12px">←</button><h2>Mijn paspoort</h2></div>
+      <div class="count">8 / 35<br>stempels</div>
+    </div>
+    <div class="tabs" id="tabs"></div>
+    <div class="spread paper" id="spread"><div class="grid" id="grid"></div><div class="pg">— 2 —</div></div>
+  </section>
+
+  <!-- BELONING -->
+  <div class="reward" id="reward" hidden>
+    <div class="page paper">
+      <div class="field">Nieuwe stempel</div>
+      <h2 id="r-name">Polen</h2>
+      <div class="stamp-zone">
+        <div class="splat" id="splat"></div>
+        <div class="stamp" id="stamp">
+          <div class="ring-outer"></div><div class="ring-inner"></div>
+          <svg class="arc" viewBox="0 0 230 230"><defs><path id="arc" d="M115 115 m-92 0 a92 92 0 1 1 184 0"/><path id="arc2" d="M115 115 m-92 0 a92 92 0 0 0 184 0"/></defs>
+            <text><textPath href="#arc" startOffset="50%" text-anchor="middle" id="r-arc">· POLEN ·</textPath></text>
+            <text><textPath href="#arc2" startOffset="50%" text-anchor="middle">TOEGELATEN</textPath></text>
+          </svg>
+          <div class="flag" id="r-flag"></div>
+        </div>
+      </div>
+      <div class="visa-meta mono">STEMPEL 8 · 26 NOV 2026 · EUROPA</div>
+      <p class="fact">Hoofdstad: <b>Warschau</b>. Polen grenst aan Duitsland, net als wij.</p>
+      <button class="primary" data-go="book">Bekijk in je paspoort</button>
+    </div>
+  </div>
+</div>
+
+<script src="../map-data.js"></script>
+<script src="flags.js"></script>
+<script>
+const NAMES = { groningen:'Groningen', friesland:'Friesland', drenthe:'Drenthe', overijssel:'Overijssel', flevoland:'Flevoland', gelderland:'Gelderland', utrecht:'Utrecht', 'noord-holland':'Noord-Holland', 'zuid-holland':'Zuid-Holland', zeeland:'Zeeland', 'noord-brabant':'Noord-Brabant', limburg:'Limburg' };
+const P = MAP_DATA.provinces;
+const allPaths = cls => Object.entries(P).map(([id, d]) => `<path class="${cls(id)}" data-id="${id}" d="${d}"/>`).join('');
+document.getElementById('cover-nl').innerHTML = allPaths(() => '');
+document.getElementById('mini-nl').innerHTML = allPaths(() => '');
+document.getElementById('mini-noord').innerHTML = allPaths(id => ['groningen','friesland','drenthe'].includes(id) ? 'hl' : '');
+document.getElementById('quiz-map').insertAdjacentHTML('beforeend', allPaths(() => 'prov'));
+const owned = ROUTE.slice(0, 7);
+document.getElementById('btn-flags').innerHTML = owned.slice(-4).map(c => flagSVG(c)).join('');
+
+// ---------- navigatie ----------
+const device = document.getElementById('device');
+let coverShown = false;
+function go(id) {
+  if (id === 'reward') { go('quiz'); return showReward(); }
+  document.querySelectorAll('.screen').forEach(s => s.hidden = s.id !== id);
+  document.getElementById('reward').hidden = true;
+  document.getElementById('reward').classList.remove('show');
+  document.querySelectorAll('.switch button').forEach(b => b.setAttribute('aria-pressed', b.dataset.go === id));
+  if (id === 'quiz') resetQuiz();
+  if (id === 'book') renderBook('Europa');
+  if (id !== 'home' || coverShown) document.getElementById('cover-wrap').style.display = 'none';
+  coverShown = true;
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) go(b.dataset.go); });
+
+// ---------- toets ----------
+let punched, qTarget;
+function resetQuiz() { punched = 8; renderHoles(); nextQ(); }
+function renderHoles(newIdx) {
+  document.getElementById('holes').innerHTML = Array.from({ length: 10 }, (_, i) => `<span class="hole ${i < punched ? 'punched' : ''}" style="${i === newIdx ? '' : 'animation:none'}"></span>`).join('');
+}
+function nextQ() {
+  const ids = Object.keys(P);
+  qTarget = ids[Math.floor(Math.random() * ids.length)];
+  document.querySelectorAll('#quiz-map .prov').forEach(p => p.setAttribute('class', 'prov' + (p.dataset.id === qTarget ? ' target' : '')));
+  const opts = [qTarget, ...ids.filter(i => i !== qTarget).sort(() => Math.random() - .5).slice(0, 3)].sort(() => Math.random() - .5);
+  document.getElementById('answers').innerHTML = opts.map((o, i) => `<button class="ans" data-a="${o}"><span class="k">${i + 1}</span>${NAMES[o]}</button>`).join('');
+}
+document.getElementById('answers').addEventListener('click', e => {
+  const b = e.target.closest('.ans'); if (!b || b.disabled) return;
+  document.querySelectorAll('.ans').forEach(x => x.disabled = true);
+  if (b.dataset.a === qTarget) {
+    b.classList.add('good');
+    document.querySelector('#quiz-map .target').setAttribute('class', 'prov ok');
+    punched++; renderHoles(punched - 1);
+    setTimeout(punched >= 10 ? showReward : nextQ, 700);
+  } else {
+    b.classList.add('bad');
+    document.querySelector(`.ans[data-a="${qTarget}"]`).classList.add('good');
+    setTimeout(nextQ, 1100);
+  }
+});
+
+// ---------- beloning ----------
+function showReward() {
+  const r = document.getElementById('reward');
+  document.getElementById('r-flag').innerHTML = flagSVG('pl');
+  const stamp = document.getElementById('stamp'), splat = document.getElementById('splat');
+  stamp.classList.remove('slam'); splat.classList.remove('go'); device.classList.remove('thud');
+  r.hidden = false; void r.offsetWidth;
+  r.classList.add('show');
+  document.querySelectorAll('.switch button').forEach(b => b.setAttribute('aria-pressed', b.dataset.go === 'reward'));
+  setTimeout(() => { stamp.classList.add('slam'); splat.classList.add('go'); device.classList.add('thud'); }, 450);
+}
+
+// ---------- verzameling ----------
+const CONTS = ['Europa', 'Azië', 'Afrika', 'Noord-Amerika', 'Zuid-Amerika', 'Oceanië'];
+const ownedAfter = ROUTE.slice(0, 8); // incl. de net gewonnen stempel
+const inks = ['#2a4fa8', '#c2362b', '#3f7a52', '#7a3f8f'];
+const shapes = ['', 'square', 'oct'];
+function renderBook(cont) {
+  document.getElementById('tabs').innerHTML = CONTS.map(c => {
+    const n = ROUTE.filter(k => FLAGS[k].cont === c).length, o = ownedAfter.filter(k => FLAGS[k].cont === c).length;
+    return `<button aria-pressed="${c === cont}" data-cont="${c}">${c} ${o}/${n}</button>`;
+  }).join('');
+  const list = ROUTE.filter(k => FLAGS[k].cont === cont);
+  document.getElementById('grid').innerHTML = list.map((k, i) => {
+    if (!ownedAfter.includes(k)) return `<div class="slot empty" aria-label="Nog niet verdiend">?</div>`;
+    const r = ((i * 37) % 22) - 11;
+    return `<button class="slot" aria-label="${FLAGS[k].name}"><span class="mini-stamp ${shapes[i % 3]}" style="--r:${r}deg;--c:${inks[i % 4]};animation-delay:${i * 45}ms"><span class="f">${flagSVG(k)}</span><span class="n">${FLAGS[k].name}</span></span></button>`;
+  }).join('');
+}
+document.getElementById('tabs').addEventListener('click', e => { const b = e.target.closest('[data-cont]'); if (b) renderBook(b.dataset.cont); });
+
+if (location.hash) go(location.hash.slice(1));
+else setTimeout(() => { coverShown = true; }, 1700);
+</script>
+</body>
+</html>

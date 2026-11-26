@@ -1,10 +1,12 @@
 // Offline-ondersteuning: eerst netwerk (zodat updates meteen binnenkomen), anders de cache.
-const CACHE = 'topo-nl-v1';
+const CACHE = 'topo-nl-v3';
 const ASSETS = [
   './',
   './index.html',
   './map-data.js',
-  './fonts/fraunces-latin.woff2',
+  './map-data-noord.js',
+  './world-data.js',
+  './flags-data.js',
   './fonts/nunito-latin.woff2',
 ];
 

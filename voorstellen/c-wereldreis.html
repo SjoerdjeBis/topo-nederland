@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Voorstel C · Wereldreis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@600;700;800;900&family=Figtree:wght@500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ocean:   #0d3b58;
+    --ocean-2: #134e73;
+    --land:    #2a6688;
+    --foam:    #eaf4fb;
+    --dim:     #9cc3dc;
+    --sun:     #ffc93c;
+    --coral:   #ff6f59;
+    --glass:   rgba(255,255,255,.08);
+    --glass-b: rgba(255,255,255,.16);
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { font-family: 'Figtree', system-ui, sans-serif; color: var(--foam); background: #071f30;
+    display: flex; align-items: center; justify-content: center; gap: 40px; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3, h4, .disp { font-family: 'Gabarito', sans-serif; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  .notes { width: 340px; font-size: 15px; line-height: 1.5; color: #c6dbe8; }
+  .notes h1 { font-size: 34px; font-weight: 900; margin: 0 0 4px; color: var(--sun); letter-spacing: -0.02em; }
+  .notes .tag { font: 500 12px 'JetBrains Mono'; letter-spacing: .12em; text-transform: uppercase; color: #6f97b0; }
+  .notes h3 { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--sun); margin: 22px 0 6px; }
+  .notes ul { margin: 0; padding-left: 18px; } .notes li { margin: 3px 0; }
+  .switch { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
+  .switch button { font: 600 13px 'Figtree'; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--glass-b); background: var(--glass); color: var(--foam); cursor: pointer; transition: transform 120ms var(--ease-out), background-color 150ms ease; }
+  .switch button[aria-pressed="true"] { background: var(--sun); color: var(--ocean); border-color: var(--sun); }
+  .switch button:active { transform: scale(0.96); }
+  @media (max-width: 860px) { .notes { display: none; } }
+
+  .device { position: relative; width: 400px; height: 820px; max-height: 96vh; border-radius: 44px; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 0%, var(--ocean-2), var(--ocean) 60%);
+    box-shadow: 0 0 0 10px #031421, 0 30px 80px rgba(0,0,0,.55); }
+  @media (max-width: 860px) { .device { width: 100%; height: 100dvh; max-height: none; border-radius: 0; box-shadow: none; } }
+  .screen { position: absolute; inset: 0; overflow-y: auto; scrollbar-width: none; display: flex; flex-direction: column; }
+  .screen[hidden] { display: none; }
+
+  /* wereldkaart */
+  svg.world { display: block; width: 100%; }
+  .world .c { fill: var(--land); stroke: var(--ocean); stroke-width: .5; stroke-linejoin: round; }
+  .world .c.mine { stroke: rgba(255,255,255,.9); stroke-width: .7; }
+  .world .c.nl { fill: var(--sun); }
+  .world .grat { fill: none; stroke: rgba(255,255,255,.05); stroke-width: .6; }
+  .here { fill: var(--sun); }
+  .here-ring { fill: none; stroke: var(--sun); stroke-width: 1; transform-box: fill-box; transform-origin: center; animation: ping 2s var(--ease-out) infinite; }
+  @keyframes ping { from { transform: scale(1); opacity: .9; } to { transform: scale(4); opacity: 0; } }
+
+  .glass { background: var(--glass); border: 1px solid var(--glass-b); border-radius: 20px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  .press { cursor: pointer; transition: transform 160ms var(--ease-out); }
+  .press:active { transform: scale(0.97); }
+
+  /* ================= START ================= */
+  .hero { position: relative; height: 380px; flex-shrink: 0; overflow: hidden;
+    -webkit-mask: linear-gradient(#000 70%, transparent); mask: linear-gradient(#000 70%, transparent); }
+  .hero svg { height: 100%; width: 100%; }
+  .hero-title { position: absolute; left: 22px; top: 52px; }
+  .hero-title h1 { margin: 0; font-size: 40px; font-weight: 900; line-height: .95; letter-spacing: -0.03em; text-shadow: 0 2px 20px rgba(13,59,88,.8); }
+  .hero-title h1 em { font-style: normal; color: var(--sun); }
+  .hero-title .coords { font-size: 11.5px; color: var(--dim); margin-top: 8px; letter-spacing: .04em; }
+  .home { padding: 0 18px 24px; margin-top: -70px; position: relative; }
+  .next { display: flex; align-items: center; gap: 14px; padding: 14px 16px; }
+  .route { flex: 1; position: relative; height: 34px; }
+  .route svg { width: 100%; height: 100%; overflow: visible; }
+  .route .dash { stroke: rgba(255,255,255,.3); stroke-width: 2; stroke-dasharray: 2 6; stroke-linecap: round; fill: none; }
+  .route .done { stroke: var(--sun); stroke-width: 2.5; fill: none; stroke-linecap: round; }
+  .next .txt b { font: 800 17px 'Gabarito'; display: block; }
+  .next .txt span { font-size: 13px; color: var(--dim); }
+  .lbl { font: 600 12px 'Figtree'; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); margin: 22px 4px 10px; }
+  .test { display: flex; align-items: center; gap: 14px; padding: 12px 14px; margin-bottom: 10px; width: 100%; text-align: left; color: inherit; font: inherit; animation: up 500ms var(--ease-out) backwards; }
+  .test:nth-of-type(2) { animation-delay: 70ms; }
+  @keyframes up { from { opacity: 0; transform: translateY(12px); } }
+  .test svg { width: 48px; height: 56px; flex-shrink: 0; }
+  .test svg path { fill: rgba(255,255,255,.18); stroke: var(--ocean); stroke-width: 6; }
+  .test svg path.hl { fill: var(--sun); }
+  .test h4 { margin: 0; font-size: 19px; font-weight: 800; }
+  .test .sub { font-size: 13px; color: var(--dim); }
+  .test .best { margin-left: auto; font: 500 13px 'JetBrains Mono'; color: var(--sun); }
+  .mapbtn { width: 100%; margin-top: 6px; padding: 16px; border: 0; border-radius: 18px; background: var(--sun); color: var(--ocean); font: 800 17px 'Gabarito'; display: flex; align-items: center; justify-content: space-between; }
+  .mapbtn span { font: 600 14px 'Figtree'; }
+
+  /* ================= TOETS ================= */
+  .quiz { padding: 50px 16px 20px; gap: 12px; }
+  .qtop { display: flex; align-items: center; gap: 10px; }
+  .icon { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; color: var(--foam); font-size: 18px; flex-shrink: 0; }
+  .flight { flex: 1; position: relative; height: 42px; padding: 0 14px; display: flex; align-items: center; gap: 8px; }
+  .flight .track { position: relative; flex: 1; height: 2px; background: repeating-linear-gradient(90deg, rgba(255,255,255,.35) 0 4px, transparent 4px 9px); }
+  .flight .fill { position: absolute; left: 0; top: 0; height: 2px; background: var(--sun); width: 80%; transition: width 500ms var(--ease-out); }
+  .flight .plane { position: absolute; top: 50%; left: 80%; transform: translate(-50%, -50%) rotate(90deg); font-size: 16px; transition: left 500ms var(--ease-out); filter: drop-shadow(0 0 6px rgba(255,201,60,.6)); }
+  .flight .end { font: 500 11px 'JetBrains Mono'; color: var(--dim); }
+  .mapcard { flex: 1; min-height: 0; border-radius: 24px; overflow: hidden; position: relative; }
+  .mapcard svg { width: 100%; height: 100%; display: block; }
+  .mapcard .prov { fill: #e6f0f6; stroke: var(--ocean); stroke-width: 1.6; stroke-linejoin: round; transition: fill 250ms ease; }
+  .mapcard .prov.target { fill: var(--coral); }
+  .mapcard .prov.ok { fill: var(--sun); }
+  .mapcard .lat { position: absolute; left: 12px; bottom: 10px; font: 500 10.5px 'JetBrains Mono'; color: var(--dim); }
+  .q { font: 800 22px 'Gabarito'; margin: 4px 4px 0; letter-spacing: -0.01em; }
+  .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .ans { padding: 15px 14px; border-radius: 16px; font: 700 16px 'Figtree'; color: var(--foam); text-align: left; }
+  .ans.good { background: var(--sun); color: var(--ocean); border-color: var(--sun); }
+  .ans.bad { background: var(--coral); border-color: var(--coral); animation: shake 300ms ease; }
+  @keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+  /* ================= BELONING ================= */
+  .reward { position: absolute; inset: 0; z-index: 30; background: rgba(7,31,48,.0); transition: background-color 300ms ease; display: flex; flex-direction: column; }
+  .reward[hidden] { display: none; }
+  .reward.show { background: rgba(7,31,48,.88); }
+  .choose { padding: 70px 20px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .choose[hidden] { display: none; }
+  .choose h2 { margin: 0; font-size: 30px; font-weight: 900; letter-spacing: -0.02em; line-height: 1; }
+  .choose p { margin: 0 0 8px; color: var(--dim); }
+  .dest { display: flex; align-items: center; gap: 14px; padding: 14px; width: 100%; text-align: left; color: inherit; font: inherit;
+    opacity: 0; transform: translateY(18px); transition: opacity 300ms ease, transform 420ms var(--ease-out), border-color 150ms ease; }
+  .reward.show .dest { opacity: 1; transform: none; }
+  .reward.show .dest:nth-of-type(2) { transition-delay: 70ms; } .reward.show .dest:nth-of-type(3) { transition-delay: 140ms; }
+  .dest svg { width: 70px; height: 70px; flex-shrink: 0; }
+  .dest svg path { fill: var(--foam); }
+  .dest h4 { margin: 0; font-size: 21px; font-weight: 800; }
+  .dest .meta { font-size: 13px; color: var(--dim); }
+  .dest .km { margin-left: auto; font: 500 12px 'JetBrains Mono'; color: var(--sun); text-align: right; }
+  @media (hover: hover) and (pointer: fine) { .dest:hover { border-color: var(--sun); } }
+
+  .flyview { position: absolute; inset: 0; display: flex; flex-direction: column; background: radial-gradient(ellipse at 50% 0%, var(--ocean-2), var(--ocean) 60%); }
+  .flyview[hidden] { display: none; }
+  .flyview svg.world { position: absolute; left: 0; right: 0; top: 0; height: 62%; }
+  .arc { fill: none; stroke: var(--sun); stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 3 4; }
+  .arc-mask { fill: none; stroke: #fff; stroke-width: 4; }
+  .newc { transition: fill 600ms ease; }
+  .landing-ring { fill: none; stroke: var(--sun); stroke-width: 1.2; opacity: 0; transform-box: fill-box; transform-origin: center; }
+  .landing-ring.go { animation: land 900ms var(--ease-out) forwards; }
+  @keyframes land { from { opacity: 1; transform: scale(.3); } to { opacity: 0; transform: scale(3); } }
+
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 22px 26px; border-radius: 28px 28px 0 0; background: #f6fafc; color: var(--ocean);
+    transform: translateY(105%); transition: transform 520ms var(--ease-drawer); text-align: center; }
+  .sheet.up { transform: none; }
+  .sheet .kicker { font: 500 11.5px 'JetBrains Mono'; letter-spacing: .08em; color: #4b7591; }
+  .sheet h2 { margin: 4px 0 14px; font-size: 34px; font-weight: 900; letter-spacing: -0.02em; }
+  /* wapperende vlag: verticale repen die in golf op en neer bewegen */
+  .wave { display: flex; width: 210px; height: 140px; margin: 0 auto; filter: drop-shadow(0 10px 14px rgba(13,59,88,.25)); }
+  .wave .strip { flex: 1; overflow: hidden; position: relative; margin-right: -1px; animation: wave 1.8s ease-in-out infinite; }
+  .wave .strip svg { position: absolute; top: 0; height: 100%; width: 210px; }
+  @keyframes wave { 50% { transform: translateY(6px); filter: brightness(.9); } }
+  .sheet .fact { font-size: 15px; margin: 16px 0 18px; line-height: 1.4; color: #2c5470; }
+  .sheet button { width: 100%; padding: 16px; border: 0; border-radius: 16px; background: var(--ocean); color: var(--foam); font: 800 17px 'Gabarito'; }
+
+  /* ================= MIJN WERELD ================= */
+  .mine { padding: 50px 0 24px; }
+  .mine > * { flex-shrink: 0; }
+  .mhead { display: flex; align-items: center; gap: 12px; padding: 0 16px 10px; }
+  .mhead h2 { margin: 0; font-size: 26px; font-weight: 900; letter-spacing: -0.02em; }
+  .mhead .cnt { margin-left: auto; font: 500 13px 'JetBrains Mono'; color: var(--sun); }
+  .worldwrap { position: relative; margin: 0 8px; border-radius: 20px; overflow: hidden; background: rgba(0,0,0,.12); }
+  .zoom { position: absolute; right: 10px; top: 10px; display: flex; padding: 3px; border-radius: 999px; }
+  .zoom button { border: 0; background: transparent; color: var(--foam); font: 700 12px 'Figtree'; padding: 6px 10px; border-radius: 999px; cursor: pointer; }
+  .zoom button[aria-pressed="true"] { background: var(--sun); color: var(--ocean); }
+  .rings { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 14px 12px 4px; }
+  .ring { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 14px; }
+  .ring .r { --p: .3; width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; background: conic-gradient(var(--sun) calc(var(--p) * 1turn), rgba(255,255,255,.12) 0); display: grid; place-items: center; }
+  .ring .r::before { content: ''; width: 26px; height: 26px; border-radius: 50%; background: var(--ocean); }
+  .ring b { font: 700 12.5px 'Figtree'; display: block; line-height: 1.1; }
+  .ring span { font: 500 11px 'JetBrains Mono'; color: var(--dim); }
+  .flaglist { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 8px; padding: 14px 16px; }
+  .fl { text-align: center; font-size: 11.5px; font-weight: 600; color: var(--dim); animation: up 400ms var(--ease-out) backwards; }
+  .fl .f { aspect-ratio: 3/2; border-radius: 6px; overflow: hidden; margin-bottom: 5px; box-shadow: 0 0 0 1px rgba(255,255,255,.2); }
+  .fl .f svg { width: 100%; height: 100%; display: block; }
+  .fl.lock .f { background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); display: grid; place-items: center; font-size: 15px; color: rgba(255,255,255,.3); }
+  .fl.newest .f { box-shadow: 0 0 0 2px var(--sun); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<aside class="notes">
+  <div class="tag">Voorstel C</div>
+  <h1>Wereldreis</h1>
+  <p>De wereldkaart is het hart van de site. Elk land dat je verdient kleurt in <b>met zijn eigen vlag</b>. Na 10 goede antwoorden kies je zelf je volgende bestemming uit drie landen, en dan vlieg je erheen.</p>
+  <h3>Zo werkt de beloning</h3>
+  <ul>
+    <li>10 goed = 1 vlucht. Je kiest uit 3 landen (zelf kiezen motiveert).</li>
+    <li>Een vliegtuigje volgt een stippellijn van Nederland naar je bestemming, daarna kleurt het land in.</li>
+    <li>Mijn wereld: de kaart vol vlaggen, plus voortgang per werelddeel.</li>
+    <li>Topo-koppeling: bij elk land de hoofdstad en de afstand vanaf Nederland.</li>
+  </ul>
+  <h3>Stijl &amp; beweging</h3>
+  <ul>
+    <li>Diepblauwe oceaan, glazen panelen, zonnegeel als enige accent.</li>
+    <li>Gabarito voor koppen, Figtree voor tekst, mono voor coördinaten.</li>
+    <li>Rustig en groots: kaart-zoom, vlucht, wapperende vlag.</li>
+  </ul>
+  <div class="switch" role="group" aria-label="Scherm">
+    <button data-go="home" aria-pressed="true">Start</button>
+    <button data-go="quiz" aria-pressed="false">Toets</button>
+    <button data-go="reward" aria-pressed="false">Bestemming kiezen</button>
+    <button data-go="mine" aria-pressed="false">Mijn wereld</button>
+  </div>
+  <p style="font-size:13px;color:#6f97b0;margin-top:14px">Tip: in “Toets” staat de teller op 8 van 10. Twee goede antwoorden en je mag een land kiezen.</p>
+</aside>
+
+<div class="device" id="device">
+  <section class="screen" id="home">
+    <div class="hero"><svg class="world" id="hero-map"></svg>
+      <div class="hero-title"><h1>Topo<br><em>Nederland</em></h1><div class="coords mono">52°22′N 4°53′E · jij bent hier</div></div>
+    </div>
+    <div class="home">
+      <div class="next glass">
+        <div class="txt"><b>Nog 3 goed</b><span>tot je volgende vlucht</span></div>
+        <div class="route"><svg viewBox="0 0 160 34" preserveAspectRatio="none"><path class="dash" d="M6 28 Q80 -6 154 20"/><path class="done" d="M6 28 Q80 -6 154 20" pathLength="1" stroke-dasharray=".7 1"/><circle cx="6" cy="28" r="4" fill="#ffc93c"/><text x="150" y="30" font-size="13">🌍</text></svg></div>
+      </div>
+      <div class="lbl">Oefenen</div>
+      <button class="test glass press" data-go="quiz"><svg viewBox="0 0 685 805" id="mini-nl"></svg><span><h4>Heel Nederland</h4><span class="sub">Provincies, steden, water</span></span><span class="best">92%</span></button>
+      <button class="test glass press" data-go="quiz"><svg viewBox="0 0 685 805" id="mini-noord"></svg><span><h4>Noord-Nederland</h4><span class="sub">Groningen, Friesland, Drenthe</span></span><span class="best">nieuw</span></button>
+      <button class="mapbtn press" data-go="mine">Mijn wereld <span>10 landen bezocht →</span></button>
+    </div>
+  </section>
+
+  <section class="screen quiz" id="quiz" hidden>
+    <div class="qtop">
+      <button class="icon glass press" data-go="home" aria-label="Terug">←</button>
+      <div class="flight glass" aria-label="8 van 10 naar je volgende vlucht"><span class="end">NL</span><div class="track"><div class="fill" id="fill"></div><span class="plane" id="plane">✈︎</span></div><span class="end">10</span></div>
+    </div>
+    <div class="mapcard glass"><svg viewBox="-20 -20 725 845" id="quiz-map"></svg><div class="lat mono">53°N · 6°E</div></div>
+    <div class="q">Welke provincie is gekleurd?</div>
+    <div class="answers" id="answers"></div>
+  </section>
+
+  <section class="screen mine" id="mine" hidden>
+    <div class="mhead"><button class="icon glass press" data-go="home" aria-label="Terug">←</button><h2>Mijn wereld</h2><span class="cnt">11 / 35</span></div>
+    <div class="worldwrap"><svg class="world" id="mine-map"></svg>
+      <div class="zoom glass"><button aria-pressed="false" data-z="europe">Europa</button><button aria-pressed="true" data-z="world">Wereld</button></div>
+    </div>
+    <div class="rings" id="rings"></div>
+    <div class="flaglist" id="flaglist"></div>
+  </section>
+
+  <div class="reward" id="reward" hidden>
+    <div class="choose" id="choose">
+      <h2>Waar wil je<br>naartoe?</h2>
+      <p>Je hebt 10 goed. Kies je volgende land.</p>
+      <div id="dests"></div>
+    </div>
+    <div class="flyview" id="flyview" hidden>
+      <svg class="world" id="fly-map" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="sheet" id="sheet">
+        <div class="kicker" id="s-kicker">LAND 11 · AZIË · 9.300 KM</div>
+        <h2 id="s-name">Japan</h2>
+        <div class="wave" id="wave"></div>
+        <p class="fact" id="s-fact"></p>
+        <button class="press" data-go="mine">Naar mijn wereld</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../map-data.js"></script>
+<script src="world-data.js"></script>
+<script src="flags.js"></script>
+<script>
+const NAMES = { groningen:'Groningen', friesland:'Friesland', drenthe:'Drenthe', overijssel:'Overijssel', flevoland:'Flevoland', gelderland:'Gelderland', utrecht:'Utrecht', 'noord-holland':'Noord-Holland', 'zuid-holland':'Zuid-Holland', zeeland:'Zeeland', 'noord-brabant':'Noord-Brabant', limburg:'Limburg' };
+const P = MAP_DATA.provinces;
+const paths = cls => Object.entries(P).map(([id, d]) => `<path class="${cls(id)}" data-id="${id}" d="${d}"/>`).join('');
+document.getElementById('mini-nl').innerHTML = paths(() => '');
+document.getElementById('mini-noord').innerHTML = paths(id => ['groningen','friesland','drenthe'].includes(id) ? 'hl' : '');
+document.getElementById('quiz-map').innerHTML = paths(() => 'prov');
+
+const OWNED = ['be','de','it','ie','at','pl','se','ch','dk','in'];
+const INFO = { jp: ['Tokio', 'Azië', 9300, 'Japan bestaat uit meer dan 6.800 eilanden. De rode cirkel is de opkomende zon.'],
+               ca: ['Ottawa', 'Noord-Amerika', 5600, 'Het op één na grootste land ter wereld, met het esdoornblad op de vlag.'],
+               ar: ['Buenos Aires', 'Zuid-Amerika', 11400, 'Hier ligt de Aconcagua, de hoogste berg buiten Azië.'] };
+
+// ---------- wereldkaart-bouwer ----------
+const NLc = WORLD.centroids.nl;
+function patternFor(code) {
+  return `<pattern id="fp-${code}" patternUnits="objectBoundingBox" patternContentUnits="objectBoundingBox" width="1" height="1"><svg width="1" height="1" viewBox="0 0 30 20" preserveAspectRatio="xMidYMid slice">${FLAGS[code].svg}</svg></pattern>`;
+}
+function buildWorld(svg, owned, { vb, extra = '' } = {}) {
+  svg.setAttribute('viewBox', vb || WORLD.viewBox);
+  const grat = Array.from({ length: 9 }, (_, i) => `<path class="grat" d="M0 ${i * 62.5}H1000"/>`).join('') + Array.from({ length: 13 }, (_, i) => `<path class="grat" d="M${i * 83.3} 0V500"/>`).join('');
+  svg.innerHTML = `<defs>${owned.map(patternFor).join('')}</defs>${grat}` +
+    Object.entries(WORLD.countries).map(([k, d]) => `<path class="c ${owned.includes(k) ? 'mine' : ''} ${k === 'nl' ? 'nl' : ''}" data-c="${k}" d="${d}" ${owned.includes(k) ? `style="fill:url(#fp-${k})"` : ''}/>`).join('') +
+    `<circle class="here-ring" cx="${NLc[0]}" cy="${NLc[1]}" r="2.5"/><circle class="here" cx="${NLc[0]}" cy="${NLc[1]}" r="2"/>` + extra;
+}
+const vbAround = ([x, y], w, ratio) => `${x - w / 2} ${y - (w * ratio) / 2} ${w} ${w * ratio}`;
+buildWorld(document.getElementById('hero-map'), OWNED, { vb: vbAround([NLc[0] - 30, NLc[1] - 28], 190, 0.95) });
+document.getElementById('hero-map').setAttribute('preserveAspectRatio', 'xMidYMid slice');
+
+// ---------- navigatie ----------
+function go(id) {
+  if (id === 'reward') { show('quiz'); return showReward(); }
+  show(id);
+}
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.hidden = s.id !== id);
+  const r = document.getElementById('reward'); r.hidden = true; r.classList.remove('show');
+  document.querySelectorAll('.switch button').forEach(b => b.setAttribute('aria-pressed', b.dataset.go === id));
+  if (id === 'quiz') resetQuiz();
+  if (id === 'mine') renderMine();
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) go(b.dataset.go); });
+
+// ---------- toets ----------
+let got, target;
+function setFlight() { document.getElementById('fill').style.width = got * 10 + '%'; document.getElementById('plane').style.left = got * 10 + '%'; }
+function resetQuiz() { got = 8; setFlight(); nextQ(); }
+function nextQ() {
+  const ids = Object.keys(P); target = ids[Math.floor(Math.random() * ids.length)];
+  document.querySelectorAll('#quiz-map .prov').forEach(p => p.setAttribute('class', 'prov' + (p.dataset.id === target ? ' target' : '')));
+  const opts = [target, ...ids.filter(i => i !== target).sort(() => Math.random() - .5).slice(0, 3)].sort(() => Math.random() - .5);
+  document.getElementById('answers').innerHTML = opts.map(o => `<button class="ans glass press" data-a="${o}">${NAMES[o]}</button>`).join('');
+}
+document.getElementById('answers').addEventListener('click', e => {
+  const b = e.target.closest('.ans'); if (!b || b.disabled) return;
+  document.querySelectorAll('.ans').forEach(x => x.disabled = true);
+  if (b.dataset.a === target) {
+    b.classList.add('good'); document.querySelector('#quiz-map .target').setAttribute('class', 'prov ok');
+    got++; setFlight();
+    setTimeout(got >= 10 ? showReward : nextQ, 800);
+  } else {
+    b.classList.add('bad'); document.querySelector(`.ans[data-a="${target}"]`).classList.add('good');
+    setTimeout(nextQ, 1100);
+  }
+});
+
+// ---------- bestemming kiezen + vlucht ----------
+function silhouette(code) {
+  const tmp = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  tmp.style.cssText = 'position:absolute;visibility:hidden'; document.body.appendChild(tmp);
+  tmp.innerHTML = `<path d="${WORLD.countries[code]}"/>`;
+  const bb = tmp.firstChild.getBBox(); tmp.remove();
+  const s = Math.max(bb.width, bb.height) * 1.1;
+  return `<svg viewBox="${bb.x + bb.width / 2 - s / 2} ${bb.y + bb.height / 2 - s / 2} ${s} ${s}"><path d="${WORLD.countries[code]}"/></svg>`;
+}
+function showReward() {
+  const r = document.getElementById('reward');
+  document.getElementById('choose').hidden = false;
+  document.getElementById('flyview').hidden = true;
+  document.getElementById('sheet').classList.remove('up');
+  document.getElementById('dests').innerHTML = ['jp', 'ca', 'ar'].map(c =>
+    `<button class="dest glass press" data-dest="${c}" style="margin-bottom:10px">${silhouette(c)}<span><h4>${FLAGS[c].name}</h4><span class="meta">${INFO[c][1]} · hoofdstad ${INFO[c][0]}</span></span><span class="km">${INFO[c][2].toLocaleString('nl-NL')}<br>km</span></button>`).join('');
+  r.hidden = false; void r.offsetWidth; r.classList.add('show');
+  document.querySelectorAll('.switch button').forEach(b => b.setAttribute('aria-pressed', b.dataset.go === 'reward'));
+}
+let picked = 'jp';
+document.getElementById('dests').addEventListener('click', e => {
+  const b = e.target.closest('[data-dest]'); if (!b) return;
+  picked = b.dataset.dest; fly(picked);
+});
+function fly(code) {
+  document.getElementById('choose').hidden = true;
+  const fv = document.getElementById('flyview'); fv.hidden = false;
+  const svg = document.getElementById('fly-map');
+  const D = WORLD.centroids[code];
+  const mx = (NLc[0] + D[0]) / 2, my = Math.min(NLc[1], D[1]) - Math.abs(D[0] - NLc[0]) * .25;
+  const arcD = `M${NLc[0]} ${NLc[1]} Q${mx} ${my} ${D[0]} ${D[1]}`;
+  buildWorld(svg, OWNED, { extra:
+    `<defs><mask id="am"><path class="arc-mask" id="arcmask" d="${arcD}"/></mask></defs>` +
+    `<path class="arc" d="${arcD}" mask="url(#am)"/><circle class="landing-ring" id="lr" cx="${D[0]}" cy="${D[1]}" r="6"/>` +
+    `<text id="plane2" font-size="9" text-anchor="middle" dominant-baseline="central" fill="#ffc93c">✈︎</text>` });
+  svg.querySelector('defs').insertAdjacentHTML('beforeend', patternFor(code));
+  // camera: start rond NL, zoom uit naar NL + bestemming
+  const x0 = Math.min(NLc[0], D[0]) - 70, x1 = Math.max(NLc[0], D[0]) + 50;
+  const y0 = Math.min(my, NLc[1], D[1]) - 20, y1 = Math.max(NLc[1], D[1]) + 20;
+  const end = [x0, y0, x1 - x0, y1 - y0], start = [NLc[0] - 60, NLc[1] - 90, 120, 240];
+  const mask = svg.querySelector('#arcmask'), len = mask.getTotalLength();
+  mask.style.strokeDasharray = len; mask.style.strokeDashoffset = len;
+  const plane = svg.querySelector('#plane2'), arcPath = mask;
+  const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const t0 = performance.now(), ZOOM = 900, FLY = 1800;
+  (function frame(now) {
+    const tz = Math.min(1, (now - t0) / ZOOM), ez = ease(tz);
+    svg.setAttribute('viewBox', start.map((s, i) => s + (end[i] - s) * ez).join(' '));
+    const tf = Math.max(0, Math.min(1, (now - t0 - 500) / FLY)), ef = ease(tf);
+    mask.style.strokeDashoffset = len * (1 - ef);
+    const p = arcPath.getPointAtLength(len * ef), p2 = arcPath.getPointAtLength(Math.min(len, len * ef + 1));
+    const ang = Math.atan2(p2.y - p.y, p2.x - p.x) * 180 / Math.PI;
+    plane.setAttribute('transform', `translate(${p.x} ${p.y}) rotate(${ang})`);
+    plane.style.opacity = tf >= 1 ? 0 : 1;
+    if (tf < 1) requestAnimationFrame(frame); else land(code);
+  })(t0);
+}
+function land(code) {
+  const svg = document.getElementById('fly-map');
+  const c = svg.querySelector(`[data-c="${code}"]`);
+  c.classList.add('newc', 'mine'); c.style.fill = `url(#fp-${code})`;
+  svg.querySelector('#lr').classList.add('go');
+  const [cap, cont, km, fact] = INFO[code];
+  document.getElementById('s-kicker').textContent = `LAND 11 · ${cont.toUpperCase()} · ${km.toLocaleString('nl-NL')} KM`;
+  document.getElementById('s-name').textContent = FLAGS[code].name;
+  document.getElementById('s-fact').innerHTML = `Hoofdstad: <b>${cap}</b>. ${fact}`;
+  const N = 14;
+  document.getElementById('wave').innerHTML = Array.from({ length: N }, (_, i) =>
+    `<div class="strip" style="animation-delay:${-i * 0.09}s"><svg viewBox="0 0 30 20" preserveAspectRatio="none" style="left:${-i * 210 / N}px">${FLAGS[code].svg}</svg></div>`).join('');
+  setTimeout(() => document.getElementById('sheet').classList.add('up'), 500);
+}
+
+// ---------- mijn wereld ----------
+const CONTS = ['Europa', 'Azië', 'Afrika', 'Noord-Amerika', 'Zuid-Amerika', 'Oceanië'];
+function renderMine() {
+  const owned = [...OWNED, picked];
+  const svg = document.getElementById('mine-map');
+  buildWorld(svg, owned, { vb: '0 20 1000 440' });
+  document.getElementById('rings').innerHTML = CONTS.map(c => {
+    const all = ROUTE.filter(k => FLAGS[k].cont === c), have = all.filter(k => owned.includes(k)).length;
+    return `<div class="ring glass"><span class="r" style="--p:${have / all.length}"></span><span><b>${c}</b><span>${have}/${all.length}</span></span></div>`;
+  }).join('');
+  document.getElementById('flaglist').innerHTML = ROUTE.map((k, i) => owned.includes(k)
+    ? `<div class="fl ${k === picked ? 'newest' : ''}" style="animation-delay:${i * 25}ms"><div class="f">${flagSVG(k)}</div>${FLAGS[k].name}</div>`
+    : `<div class="fl lock" style="animation-delay:${i * 25}ms"><div class="f">?</div>&nbsp;</div>`).join('');
+}
+document.querySelector('.zoom').addEventListener('click', e => {
+  const b = e.target.closest('[data-z]'); if (!b) return;
+  document.querySelectorAll('.zoom button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  const svg = document.getElementById('mine-map');
+  const from = svg.getAttribute('viewBox').split(' ').map(Number);
+  const to = b.dataset.z === 'europe' ? vbAround([NLc[0] + 20, NLc[1] + 15], 200, .44) .split(' ').map(Number) : [0, 20, 1000, 440];
+  const t0 = performance.now();
+  (function f(now) { const t = Math.min(1, (now - t0) / 650), e = 1 - Math.pow(1 - t, 3);
+    svg.setAttribute('viewBox', from.map((s, i) => s + (to[i] - s) * e).join(' ')); if (t < 1) requestAnimationFrame(f); })(t0);
+});
+
+if (location.hash) go(location.hash.slice(1));
+</script>
+</body>
+</html>
