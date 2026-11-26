@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Voorstel B · Vlaggen-plakboek</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Rubik:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:   #14163a;
+    --blue:  #2b3cff;
+    --sun:   #ffd23f;
+    --tomato:#ff5a36;
+    --mint:  #19c37d;
+    --sky:   #e8efff;
+    --grid:  #c9d6ff;
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { font-family: 'Rubik', system-ui, sans-serif; color: var(--ink); background: var(--blue);
+    display: flex; align-items: center; justify-content: center; gap: 40px; -webkit-font-smoothing: antialiased; }
+  .display { font-family: 'Bowlby One', 'Rubik', sans-serif; font-weight: 400; letter-spacing: .01em; }
+
+  .notes { width: 340px; color: #fff; font-size: 15px; line-height: 1.5; }
+  .notes h1 { font: 400 34px 'Bowlby One'; margin: 0 0 6px; color: var(--sun); line-height: 1; }
+  .notes .tag { font-weight: 800; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; opacity: .7; }
+  .notes h3 { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--sun); margin: 22px 0 6px; }
+  .notes ul { margin: 0; padding-left: 18px; } .notes li { margin: 3px 0; }
+  .switch { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .switch button { font: 700 13px 'Rubik'; padding: 8px 12px; border-radius: 10px; border: 2px solid var(--ink); background: #fff; color: var(--ink); cursor: pointer; box-shadow: 3px 3px 0 var(--ink); transition: transform 100ms var(--ease-out), box-shadow 100ms var(--ease-out); }
+  .switch button[aria-pressed="true"] { background: var(--sun); }
+  .switch button:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink); }
+  @media (max-width: 860px) { .notes { display: none; } }
+
+  .device { position: relative; width: 400px; height: 820px; max-height: 96vh; border-radius: 44px; overflow: hidden;
+    border: 3px solid var(--ink); box-shadow: 10px 10px 0 var(--ink);
+    /* ruitjespapier uit een schoolschrift */
+    background: #fff;
+    background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 22px 22px; background-position: -1px -1px; }
+  @media (max-width: 860px) { .device { width: 100%; height: 100dvh; max-height: none; border-radius: 0; border: 0; box-shadow: none; } }
+  .screen { position: absolute; inset: 0; overflow-y: auto; scrollbar-width: none; display: flex; flex-direction: column; }
+  .screen[hidden] { display: none; }
+
+  /* knoppen en kaarten: dikke lijn + harde schaduw die je echt indrukt */
+  .chunk { border: 2.5px solid var(--ink); border-radius: 18px; background: #fff; box-shadow: 4px 4px 0 var(--ink); }
+  .press { cursor: pointer; transition: transform 110ms var(--ease-out), box-shadow 110ms var(--ease-out); }
+  .press:active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--ink); }
+
+  /* ================= START ================= */
+  .home { padding: 52px 20px 26px; }
+  .logo { position: relative; margin: 4px 0 18px; }
+  .logo .w { display: inline-block; font: 400 52px/0.95 'Bowlby One'; color: var(--blue); -webkit-text-stroke: 2.5px var(--ink); paint-order: stroke fill; text-shadow: 4px 4px 0 var(--ink); }
+  .logo .w2 { color: var(--tomato); }
+  .logo .w span { display: inline-block; animation: hop 600ms var(--spring) backwards; }
+  @keyframes hop { from { transform: translateY(-30px) rotate(-8deg); opacity: 0; } }
+  .logo .badge { position: absolute; right: 0; top: 6px; transform: rotate(9deg); background: var(--sun); padding: 8px 10px; border-radius: 12px; font-weight: 800; font-size: 13px; line-height: 1.15; text-align: center; }
+
+  .packmeter { padding: 14px; display: flex; gap: 14px; align-items: center; background: var(--sun); }
+  .packmeter .mini-pack { width: 54px; height: 66px; flex-shrink: 0; }
+  .packmeter .txt { flex: 1; }
+  .packmeter b { font: 400 18px 'Bowlby One'; display: block; }
+  .bar { height: 14px; border: 2.5px solid var(--ink); border-radius: 99px; background: #fff; margin-top: 8px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 60%; background: var(--tomato); border-right: 2.5px solid var(--ink);
+    background-image: repeating-linear-gradient(-45deg, transparent 0 6px, rgba(255,255,255,.35) 6px 12px); }
+
+  .h { font: 400 15px 'Bowlby One'; letter-spacing: .02em; margin: 22px 2px 10px; }
+  .test { display: flex; align-items: center; gap: 14px; padding: 14px; margin-bottom: 14px; width: 100%; text-align: left; font: inherit; color: inherit; animation: drop 480ms var(--spring) backwards; }
+  .test:nth-of-type(2) { animation-delay: 70ms; }
+  @keyframes drop { from { transform: translateY(-16px) rotate(-2deg); opacity: 0; } }
+  .test svg { width: 56px; height: 66px; flex-shrink: 0; }
+  .test svg path { fill: var(--sky); stroke: var(--ink); stroke-width: 7; stroke-linejoin: round; }
+  .test svg path.hl { fill: var(--mint); }
+  .test h4 { margin: 0; font: 400 20px 'Bowlby One'; }
+  .test .sub { font-size: 13.5px; font-weight: 600; opacity: .7; }
+  .test .go { margin-left: auto; width: 40px; height: 40px; border-radius: 50%; border: 2.5px solid var(--ink); background: var(--blue); color: #fff; display: grid; place-items: center; font-weight: 800; flex-shrink: 0; }
+  .albumbtn { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--blue); color: #fff; width: 100%; font: inherit; }
+  .albumbtn b { font: 400 18px 'Bowlby One'; }
+  .albumbtn .pile { margin-left: auto; display: flex; }
+  .albumbtn .pile span { width: 30px; height: 22px; border: 2px solid var(--ink); border-radius: 4px; overflow: hidden; margin-left: -10px; background: #fff; }
+  .albumbtn .pile span:nth-child(1) { transform: rotate(-10deg); } .albumbtn .pile span:nth-child(2) { transform: rotate(4deg); } .albumbtn .pile span:nth-child(3) { transform: rotate(-3deg); }
+  .albumbtn .pile svg { width: 100%; height: 100%; display: block; }
+
+  /* ================= TOETS ================= */
+  .quiz { padding: 50px 16px 20px; gap: 12px; }
+  .qtop { display: flex; gap: 10px; align-items: center; }
+  .back { width: 44px; height: 44px; border-radius: 14px; font: 800 18px 'Rubik'; display: grid; place-items: center; flex-shrink: 0; }
+  .slots { flex: 1; display: flex; justify-content: space-between; padding: 8px 10px; background: #fff; }
+  .s { width: 20px; height: 26px; border: 2px dashed #9aa6d6; border-radius: 5px; }
+  .s.f { border: 2px solid var(--ink); background: var(--sun); animation: pop 380ms var(--spring); }
+  .s.f:nth-child(even) { background: var(--tomato); } .s.f:nth-child(3n) { background: var(--mint); }
+  @keyframes pop { from { transform: scale(.5) rotate(-20deg); } }
+  .mapbox { flex: 1; min-height: 0; position: relative; overflow: hidden; background: #8fd3ff; }
+  .mapbox svg { width: 100%; height: 100%; display: block; }
+  .mapbox .prov { fill: #fff; stroke: var(--ink); stroke-width: 2.4; stroke-linejoin: round; transition: fill 200ms ease; }
+  .mapbox .prov.target { fill: var(--tomato); }
+  .mapbox .prov.ok { fill: var(--mint); }
+  .q { font: 400 22px/1.15 'Bowlby One'; margin: 4px 2px 0; }
+  .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .ans { padding: 15px 12px; font: 700 16px 'Rubik'; color: var(--ink); text-align: left; border-radius: 14px; }
+  .ans.good { background: var(--mint); } .ans.bad { background: var(--tomato); color: #fff; animation: wob 320ms ease; }
+  @keyframes wob { 25% { transform: rotate(-3deg); } 75% { transform: rotate(3deg); } }
+  .plus { position: absolute; font: 400 26px 'Bowlby One'; color: var(--mint); -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; pointer-events: none; animation: plus 700ms var(--ease-out) forwards; }
+  @keyframes plus { from { transform: translateY(0) scale(.8); opacity: 1; } to { transform: translateY(-50px) scale(1.1); opacity: 0; } }
+
+  /* ================= BELONING: pakje openscheuren ================= */
+  .reward { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+    background: var(--blue); background-image: repeating-conic-gradient(from 0deg at 50% 45%, rgba(255,255,255,.07) 0 10deg, transparent 10deg 20deg);
+    opacity: 0; transition: opacity 250ms ease; }
+  .reward[hidden] { display: none; }
+  .reward.show { opacity: 1; }
+  .reward .title { font: 400 30px 'Bowlby One'; color: #fff; -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; text-shadow: 3px 3px 0 var(--ink); text-align: center; line-height: 1.05; }
+  .stage { position: relative; width: 230px; height: 320px; }
+  .pack { position: absolute; inset: 0; cursor: pointer; animation: pack-in 600ms var(--spring) backwards, idle 2.2s ease-in-out 700ms infinite; }
+  @keyframes pack-in { from { transform: translateY(80px) scale(.85) rotate(8deg); opacity: 0; } }
+  @keyframes idle { 50% { transform: rotate(-2.5deg) translateY(-4px); } }
+  .pack .body, .pack .top { position: absolute; left: 0; right: 0; border: 3px solid var(--ink); background: var(--tomato); overflow: hidden; }
+  .pack .body { top: 46px; bottom: 0; border-radius: 0 0 16px 16px; border-top: 0;
+    clip-path: polygon(0 6px, 8% 0, 16% 6px, 24% 0, 32% 6px, 40% 0, 48% 6px, 56% 0, 64% 6px, 72% 0, 80% 6px, 88% 0, 96% 6px, 100% 0, 100% 100%, 0 100%); }
+  .pack .top { top: 0; height: 56px; border-radius: 16px 16px 0 0; border-bottom: 0; transform-origin: 90% 100%;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 96% calc(100% - 6px), 88% 100%, 80% calc(100% - 6px), 72% 100%, 64% calc(100% - 6px), 56% 100%, 48% calc(100% - 6px), 40% 100%, 32% calc(100% - 6px), 24% 100%, 16% calc(100% - 6px), 8% 100%, 0 calc(100% - 6px)); }
+  .pack .shine { position: absolute; inset: 0; background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.45) 45%, transparent 55%); }
+  .pack .label { position: absolute; left: 18px; right: 18px; top: 80px; text-align: center; color: #fff; }
+  .pack .label b { display: block; font: 400 34px/0.95 'Bowlby One'; -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; }
+  .pack .label span { display: inline-block; margin-top: 12px; background: var(--sun); color: var(--ink); border: 2.5px solid var(--ink); border-radius: 10px; padding: 4px 10px; font-weight: 800; font-size: 13px; }
+  .pack .q-mark { position: absolute; left: 50%; bottom: 34px; transform: translateX(-50%); width: 92px; height: 92px; border-radius: 50%; background: var(--sun); border: 3px solid var(--ink); display: grid; place-items: center; font: 400 52px 'Bowlby One'; }
+  .pack.torn { animation: none; }
+  .pack.torn .top { animation: tear 520ms var(--ease-out) forwards; }
+  @keyframes tear { to { transform: translate(110px, -140px) rotate(38deg); opacity: 0; } }
+  .pack.torn .body { animation: drop-out 500ms var(--ease-in-out) 520ms forwards; }
+  @keyframes drop-out { to { transform: translateY(420px) rotate(-6deg); opacity: 0; } }
+  .pack.torn .label { animation: fade-out 200ms ease forwards; }
+  @keyframes fade-out { to { opacity: 0; } }
+
+  .sticker { position: absolute; left: 50%; top: 60px; width: 200px; margin-left: -100px; perspective: 900px; opacity: 0; pointer-events: none; }
+  .sticker.out { animation: rise-out 650ms var(--spring) 380ms forwards; pointer-events: auto; }
+  @keyframes rise-out { from { opacity: 1; transform: translateY(120px); } to { opacity: 1; transform: translateY(-10px); } }
+  .card { position: relative; transform-style: preserve-3d; transition: transform 700ms var(--ease-in-out); transform: rotateY(180deg); }
+  .sticker.flip .card { transform: rotateY(0deg); }
+  .face, .back-face { backface-visibility: hidden; border: 3px solid var(--ink); border-radius: 16px; background: #fff; padding: 12px; box-shadow: 6px 6px 0 var(--ink); }
+  .back-face { position: absolute; inset: 0; transform: rotateY(180deg); background: var(--sun); display: grid; place-items: center; font: 400 64px 'Bowlby One'; }
+  .face .flag { position: relative; aspect-ratio: 3/2; border: 2.5px solid var(--ink); border-radius: 8px; overflow: hidden; }
+  .face .flag svg { width: 100%; height: 100%; display: block; }
+  /* glans-plaatje: holografische laag die meebeweegt met je vinger */
+  .face .flag::after { content: ''; position: absolute; inset: 0; mix-blend-mode: overlay; opacity: .7;
+    background: linear-gradient(calc(110deg + var(--tilt, 0deg)), transparent 30%, rgba(255,154,230,.8) 42%, rgba(142,247,255,.8) 50%, rgba(255,243,138,.8) 58%, transparent 70%);
+    background-size: 220% 100%; background-position: var(--hx, 50%) 0; }
+  .face .meta { display: flex; justify-content: space-between; align-items: baseline; margin-top: 10px; }
+  .face .meta b { font: 400 22px 'Bowlby One'; }
+  .face .num { font-weight: 800; font-size: 13px; background: var(--ink); color: #fff; border-radius: 6px; padding: 2px 6px; }
+  .face .holo { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--blue); margin-top: 2px; }
+  .hint { color: #fff; font-weight: 700; font-size: 15px; opacity: .9; text-align: center; min-height: 44px; }
+  .cta { padding: 16px 26px; background: var(--sun); font: 400 18px 'Bowlby One'; border-radius: 16px; opacity: 0; transform: translateY(10px); transition: opacity 250ms ease, transform 300ms var(--ease-out); }
+  .cta.on { opacity: 1; transform: none; }
+  .confetti { position: absolute; width: 10px; height: 14px; border: 2px solid var(--ink); border-radius: 3px; pointer-events: none; animation: conf 1100ms var(--ease-out) forwards; }
+  @keyframes conf { to { transform: translate(var(--x), var(--y)) rotate(var(--r)); opacity: 0; } }
+
+  /* ================= ALBUM ================= */
+  .album { padding: 50px 14px 26px; }
+  .ahead { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .ahead h2 { margin: 0; font: 400 26px 'Bowlby One'; }
+  .ahead .cnt { margin-left: auto; padding: 6px 10px; background: var(--sun); font-weight: 800; border-radius: 12px; }
+  .cont { margin-bottom: 18px; padding: 14px 12px 16px; }
+  .cont h3 { margin: 0 0 12px; font: 400 17px 'Bowlby One'; display: flex; align-items: center; gap: 8px; }
+  .cont h3 small { font: 700 12px 'Rubik'; opacity: .6; }
+  .cont h3 .done { margin-left: auto; font: 800 11px 'Rubik'; background: var(--mint); border: 2px solid var(--ink); border-radius: 8px; padding: 2px 6px; }
+  .slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .slot { aspect-ratio: 3/2.6; border-radius: 10px; position: relative; border: 2px dashed #9aa6d6; background: rgba(232,239,255,.7); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #6f7bb0; font-size: 11px; font-weight: 700; text-align: center; padding: 4px; }
+  .slot .no { font: 400 20px 'Bowlby One'; color: #9aa6d6; }
+  .slot.has { border: 2.5px solid var(--ink); background: #fff; padding: 5px; box-shadow: 3px 3px 0 var(--ink); transform: rotate(var(--r)); justify-content: flex-start; color: var(--ink); animation: stick 420ms var(--spring) backwards; }
+  @keyframes stick { from { transform: scale(1.15) rotate(calc(var(--r) * 3)); opacity: 0; } }
+  .slot.has .f { width: 100%; aspect-ratio: 3/2; border-radius: 5px; overflow: hidden; border: 2px solid var(--ink); }
+  .slot.has .f svg { width: 100%; height: 100%; display: block; }
+  .slot.has span { margin-top: 3px; }
+  /* omgekrulde hoek */
+  .slot.has::after { content: ''; position: absolute; right: -2px; bottom: -2px; width: 14px; height: 14px; background: linear-gradient(135deg, #fff 45%, #d9def5 50%, var(--sky) 55%); border-top-left-radius: 6px; }
+  .slot.new { outline: 3px solid var(--sun); outline-offset: 3px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<aside class="notes">
+  <div class="tag">Voorstel B</div>
+  <h1>Vlaggen&shy;plakboek</h1>
+  <p>Vlaggen verzamel je als plakplaatjes. Elke 10 goede antwoorden krijg je een <b>pakje</b> dat je zelf openscheurt. In het album staan genummerde vakjes per werelddeel, met de landnaam al klaar, zodat je ziet wat je nog mist.</p>
+  <h3>Zo werkt de beloning</h3>
+  <ul>
+    <li>10 goed = 1 pakje met een vlag die je nog niet hebt.</li>
+    <li>Hele ronde zonder fouten? Dan wordt het een <b>glansplaatje</b> (holografisch, beweegt mee met je vinger).</li>
+    <li>De pakjesmeter op het startscherm laat zien hoe ver je bent.</li>
+    <li>Werelddeel compleet = gouden rand om die pagina.</li>
+  </ul>
+  <h3>Stijl &amp; beweging</h3>
+  <ul>
+    <li>Ruitjespapier uit je schoolschrift, dikke inktlijnen, harde schaduwen.</li>
+    <li>Bowlby One voor koppen, Rubik voor tekst. Vrolijk maar goed leesbaar.</li>
+    <li>Knoppen die je echt indrukt, pakje scheuren, plaatje omdraaien, confetti.</li>
+  </ul>
+  <div class="switch" role="group" aria-label="Scherm">
+    <button data-go="home" aria-pressed="true">Start</button>
+    <button data-go="quiz" aria-pressed="false">Toets</button>
+    <button data-go="reward" aria-pressed="false">Pakje openen</button>
+    <button data-go="album" aria-pressed="false">Album</button>
+  </div>
+  <p style="font-size:13px;opacity:.75;margin-top:14px">Tip: in “Toets” staat de teller op 8 van 10. Twee goede antwoorden en je krijgt een pakje.</p>
+</aside>
+
+<div class="device" id="device">
+  <section class="screen" id="home">
+    <div class="home">
+      <div class="logo">
+        <div class="w"><span>T</span><span style="animation-delay:40ms">O</span><span style="animation-delay:80ms">P</span><span style="animation-delay:120ms">O</span></div><br>
+        <div class="w w2"><span style="animation-delay:180ms">N</span><span style="animation-delay:210ms">E</span><span style="animation-delay:240ms">D</span><span style="animation-delay:270ms">E</span><span style="animation-delay:300ms">R</span><span style="animation-delay:330ms">L</span><span style="animation-delay:360ms">A</span><span style="animation-delay:390ms">N</span><span style="animation-delay:420ms">D</span></div>
+        <div class="badge chunk">12 van 35<br>vlaggen</div>
+      </div>
+      <div class="packmeter chunk">
+        <svg class="mini-pack" viewBox="0 0 54 66"><rect x="2" y="2" width="50" height="62" rx="8" fill="#ff5a36" stroke="#14163a" stroke-width="2.5"/><path d="M2 16h50" stroke="#14163a" stroke-width="2.5" stroke-dasharray="4 3"/><circle cx="27" cy="40" r="12" fill="#ffd23f" stroke="#14163a" stroke-width="2.5"/><text x="27" y="47" text-anchor="middle" font-family="Bowlby One" font-size="18" fill="#14163a">?</text></svg>
+        <div class="txt"><b>Nog 4 goed!</b><span style="font-weight:600;font-size:14px">Dan krijg je een nieuw pakje.</span><div class="bar"><i></i></div></div>
+      </div>
+      <div class="h">Wat ga je oefenen?</div>
+      <button class="test chunk press" data-go="quiz"><svg viewBox="0 0 685 805" id="mini-nl"></svg><span><h4>Heel Nederland</h4><span class="sub">Provincies · steden · water</span></span><span class="go">→</span></button>
+      <button class="test chunk press" data-go="quiz"><svg viewBox="0 0 685 805" id="mini-noord"></svg><span><h4>Noord-Nederland</h4><span class="sub">Groningen · Friesland · Drenthe</span></span><span class="go">→</span></button>
+      <button class="albumbtn chunk press" data-go="album"><b>Mijn album</b><span class="pile" id="pile"></span></button>
+    </div>
+  </section>
+
+  <section class="screen quiz" id="quiz" hidden>
+    <div class="qtop">
+      <button class="back chunk press" data-go="home" aria-label="Terug">←</button>
+      <div class="slots chunk" id="slots" aria-label="8 van 10 naar je volgende pakje"></div>
+    </div>
+    <div class="mapbox chunk"><svg viewBox="-20 -20 725 845" id="quiz-map"></svg></div>
+    <div class="q">Welke provincie is rood?</div>
+    <div class="answers" id="answers"></div>
+  </section>
+
+  <section class="screen album" id="album" hidden>
+    <div class="ahead"><button class="back chunk press" data-go="home" aria-label="Terug">←</button><h2>Mijn album</h2><span class="cnt chunk">13 / 35</span></div>
+    <div id="conts"></div>
+  </section>
+
+  <div class="reward" id="reward" hidden>
+    <div class="title" id="r-title">Nieuw pakje!</div>
+    <div class="stage" id="stage">
+      <div class="pack" id="pack" role="button" aria-label="Pakje openscheuren">
+        <div class="body"><div class="shine"></div><div class="q-mark">?</div></div>
+        <div class="top"><div class="shine"></div></div>
+        <div class="label"><b>VLAG&shy;GEN</b><span>1 plaatje</span></div>
+      </div>
+      <div class="sticker" id="sticker">
+        <div class="card">
+          <div class="face" id="face"><div class="flag" id="r-flag"></div><div class="meta"><b>Japan</b><span class="num">#19</span></div><div class="holo">✦ Glansplaatje · Azië</div></div>
+          <div class="back-face">?</div>
+        </div>
+      </div>
+    </div>
+    <div class="hint" id="hint">Tik op het pakje om het open te scheuren</div>
+    <button class="cta chunk press" id="cta" data-go="album">Plak in je album</button>
+  </div>
+</div>
+
+<script src="../map-data.js"></script>
+<script src="flags.js"></script>
+<script>
+const NAMES = { groningen:'Groningen', friesland:'Friesland', drenthe:'Drenthe', overijssel:'Overijssel', flevoland:'Flevoland', gelderland:'Gelderland', utrecht:'Utrecht', 'noord-holland':'Noord-Holland', 'zuid-holland':'Zuid-Holland', zeeland:'Zeeland', 'noord-brabant':'Noord-Brabant', limburg:'Limburg' };
+const P = MAP_DATA.provinces;
+const paths = cls => Object.entries(P).map(([id, d]) => `<path class="${cls(id)}" data-id="${id}" d="${d}"/>`).join('');
+document.getElementById('mini-nl').innerHTML = paths(() => '');
+document.getElementById('mini-noord').innerHTML = paths(id => ['groningen','friesland','drenthe'].includes(id) ? 'hl' : '');
+document.getElementById('quiz-map').innerHTML = paths(() => 'prov');
+const OWNED = ['be','de','fr','it','ie','at','pl','se','dk','ch','in','ng'];
+document.getElementById('pile').innerHTML = OWNED.slice(-3).map(c => `<span>${flagSVG(c)}</span>`).join('');
+
+const device = document.getElementById('device');
+function go(id) {
+  if (id === 'reward') { show('quiz'); return showReward(); }
+  show(id);
+}
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.hidden = s.id !== id);
+  const r = document.getElementById('reward'); r.hidden = true; r.classList.remove('show');
+  document.querySelectorAll('.switch button').forEach(b => b.setAttribute('aria-pressed', b.dataset.go === id));
+  if (id === 'quiz') resetQuiz();
+  if (id === 'album') renderAlbum();
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) go(b.dataset.go); });
+
+// ---------- toets ----------
+let got, target;
+function resetQuiz() { got = 8; renderSlots(); nextQ(); }
+function renderSlots(n) { document.getElementById('slots').innerHTML = Array.from({ length: 10 }, (_, i) => `<span class="s ${i < got ? 'f' : ''}" style="${i === n ? '' : 'animation:none'}"></span>`).join(''); }
+function nextQ() {
+  const ids = Object.keys(P); target = ids[Math.floor(Math.random() * ids.length)];
+  document.querySelectorAll('#quiz-map .prov').forEach(p => p.setAttribute('class', 'prov' + (p.dataset.id === target ? ' target' : '')));
+  const opts = [target, ...ids.filter(i => i !== target).sort(() => Math.random() - .5).slice(0, 3)].sort(() => Math.random() - .5);
+  document.getElementById('answers').innerHTML = opts.map(o => `<button class="ans chunk press" data-a="${o}">${NAMES[o]}</button>`).join('');
+}
+document.getElementById('answers').addEventListener('click', e => {
+  const b = e.target.closest('.ans'); if (!b || b.disabled) return;
+  document.querySelectorAll('.ans').forEach(x => x.disabled = true);
+  if (b.dataset.a === target) {
+    b.classList.add('good');
+    document.querySelector('#quiz-map .target').setAttribute('class', 'prov ok');
+    const r = b.getBoundingClientRect(), d = device.getBoundingClientRect();
+    const p = document.createElement('div'); p.className = 'plus'; p.textContent = '+1';
+    p.style.left = (r.left - d.left + r.width / 2 - 16) + 'px'; p.style.top = (r.top - d.top - 10) + 'px';
+    device.appendChild(p); setTimeout(() => p.remove(), 800);
+    got++; renderSlots(got - 1);
+    setTimeout(got >= 10 ? showReward : nextQ, 750);
+  } else {
+    b.classList.add('bad');
+    document.querySelector(`.ans[data-a="${target}"]`).classList.add('good');
+    setTimeout(nextQ, 1100);
+  }
+});
+
+// ---------- pakje ----------
+const pack = document.getElementById('pack'), sticker = document.getElementById('sticker');
+function showReward() {
+  const r = document.getElementById('reward');
+  document.getElementById('r-flag').innerHTML = flagSVG('jp');
+  pack.classList.remove('torn'); pack.style.display = '';
+  sticker.className = 'sticker';
+  document.getElementById('cta').classList.remove('on');
+  document.getElementById('hint').textContent = 'Tik op het pakje om het open te scheuren';
+  document.getElementById('r-title').textContent = 'Nieuw pakje!';
+  r.hidden = false; void r.offsetWidth; r.classList.add('show');
+  document.querySelectorAll('.switch button').forEach(b => b.setAttribute('aria-pressed', b.dataset.go === 'reward'));
+}
+pack.addEventListener('click', () => {
+  if (pack.classList.contains('torn')) return;
+  pack.classList.add('torn');
+  document.getElementById('hint').textContent = '';
+  sticker.classList.add('out');
+  setTimeout(() => {
+    sticker.classList.add('flip');
+    document.getElementById('r-title').innerHTML = 'Je hebt<br>Japan!';
+    burst();
+  }, 1050);
+  setTimeout(() => {
+    document.getElementById('hint').innerHTML = 'Hoofdstad: <b>Tokio</b><br>Rode zon op een witte vlag.';
+    document.getElementById('cta').classList.add('on');
+  }, 1600);
+});
+function burst() {
+  const st = document.getElementById('stage'), cols = ['#ffd23f', '#ff5a36', '#19c37d', '#fff'];
+  for (let i = 0; i < 26; i++) {
+    const c = document.createElement('i'); c.className = 'confetti';
+    const a = Math.random() * Math.PI * 2, dist = 120 + Math.random() * 120;
+    c.style.cssText = `left:115px;top:150px;background:${cols[i % 4]};--x:${Math.cos(a) * dist}px;--y:${Math.sin(a) * dist - 40}px;--r:${Math.random() * 540 - 270}deg`;
+    st.appendChild(c); setTimeout(() => c.remove(), 1200);
+  }
+}
+// holo volgt de vinger / muis
+document.getElementById('face').addEventListener('pointermove', e => {
+  const r = e.currentTarget.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+  e.currentTarget.style.setProperty('--hx', (x * 100) + '%');
+  e.currentTarget.style.setProperty('--tilt', ((y - .5) * 40) + 'deg');
+  e.currentTarget.closest('.card').style.transform = `rotateY(${(x - .5) * 16}deg) rotateX(${(.5 - y) * 12}deg)`;
+});
+document.getElementById('face').addEventListener('pointerleave', e => { e.currentTarget.closest('.card').style.transform = ''; });
+
+// ---------- album ----------
+const CONTS = ['Europa', 'Azië', 'Afrika', 'Zuid-Amerika', 'Noord-Amerika', 'Oceanië'];
+function renderAlbum() {
+  const owned = [...OWNED, 'jp'];
+  let n = 0;
+  document.getElementById('conts').innerHTML = CONTS.map(c => {
+    const list = ROUTE.filter(k => FLAGS[k].cont === c);
+    const have = list.filter(k => owned.includes(k)).length;
+    return `<div class="cont chunk"><h3>${c} <small>${have}/${list.length}</small>${have === list.length ? '<span class="done">Compleet</span>' : ''}</h3><div class="slots-grid">${list.map((k, i) => {
+      n++;
+      if (!owned.includes(k)) return `<div class="slot"><span class="no">${n}</span>${FLAGS[k].name}</div>`;
+      const r = ((n * 53) % 9) - 4;
+      return `<div class="slot has ${k === 'jp' ? 'new' : ''}" style="--r:${r}deg;animation-delay:${i * 40}ms"><span class="f">${flagSVG(k)}</span><span>${FLAGS[k].name}</span></div>`;
+    }).join('')}</div></div>`;
+  }).join('');
+}
+
+if (location.hash) go(location.hash.slice(1));
+</script>
+</body>
+</html>
