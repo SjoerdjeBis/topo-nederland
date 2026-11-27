@@ -169,12 +169,11 @@
 
   /* ============ TOETS ============ */
   #quiz { gap: 10px; }
-  .topbar { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .topbar { display: flex; align-items: center; gap: 8px; flex-shrink: 0; min-width: 0; padding-right: var(--shadow); }
   .score { background: #fff; }
   .score .good { color: #0e8a55; } .score .bad { color: var(--red); }
-  .streak { background: var(--sun); display: none; }
-  .streak.show { display: inline-flex; animation: pop 380ms var(--spring); }
-  .meter { margin-left: auto; padding: 5px 10px; display: flex; align-items: center; gap: 8px; border-radius: 14px; background: #fff; }
+  #quiz > .progress { flex-shrink: 0; margin-right: var(--shadow); }
+  .meter { flex-shrink: 0; margin-left: auto; padding: 5px 10px; display: flex; align-items: center; gap: 8px; border-radius: 14px; background: #fff; }
   .meter .plane { font-size: 18px; }
   .meter .slots { margin: 0; gap: 3px; }
   .meter .slot-s { width: 13px; height: 18px; max-width: none; flex: none; border-radius: 4px; }
@@ -246,6 +245,11 @@
     .meter { padding: 5px 7px; gap: 5px; }
     .topbar .pill { padding: 6px 9px; font-size: .88em; }
     .topbar .lbl { display: none; }
+  }
+  @media (max-width: 350px) {
+    .meter .plane { display: none; }
+    .meter .slots { gap: 2px; }
+    .meter .slot-s { width: 6px; height: 14px; border-radius: 3px; }
   }
   @media (max-height: 520px) {
     .question { font-size: 1em; min-height: 2.2em; }
@@ -403,6 +407,11 @@
     background: linear-gradient(calc(110deg + var(--tilt, 0deg)), transparent 25%, rgba(255,120,220,.9) 38%, rgba(120,240,255,.9) 50%, rgba(255,240,120,.9) 62%, transparent 75%);
     background-size: 250% 100%; background-position: var(--hx, 50%) 0; }
   .fl .holo::after { animation: holo-sweep 3.2s ease-in-out infinite; }
+  .fl .holo { touch-action: pan-y; transition: transform 380ms var(--spring); }
+  .holo.touching::after { animation: none; opacity: 1; }
+  @property --hx { syntax: '<percentage>'; inherits: true; initial-value: 50%; }
+  @property --tilt { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
+  .fl .f.holo, .sticker .st-flag { transition: --hx 260ms ease-out, --tilt 260ms ease-out, transform 380ms var(--spring); }
   @keyframes holo-sweep { 0%, 100% { background-position: 0% 0; } 50% { background-position: 100% 0; } }
   .fl .spark { position: absolute; right: -6px; top: -8px; font-size: 14px; color: var(--blue); text-shadow: 1px 1px 0 #fff; }
   @media (min-width: 900px) {
@@ -445,6 +454,8 @@
   .sticker-wrap { perspective: 900px; margin-top: -40px; }
   .sticker { width: 230px; padding: 12px; border-radius: 18px; transform-style: preserve-3d; transition: transform 160ms ease-out; opacity: 0; }
   .sticker.in { animation: sticker-in 700ms var(--spring) forwards; }
+  .sticker.shown { opacity: 1; }
+  .sticker { touch-action: none; cursor: grab; transition: transform 380ms var(--spring); }
   @keyframes sticker-in { from { opacity: 0; transform: translateY(60px) rotateY(160deg) scale(.8); } to { opacity: 1; transform: none; } }
   .sticker .st-flag { position: relative; aspect-ratio: 3/2; border: var(--line) solid var(--ink); border-radius: 10px; overflow: hidden; }
   .sticker .st-flag svg { width: 100%; height: 100%; display: block; }
@@ -530,7 +541,6 @@
         <span aria-hidden="true">&#10060;</span><span class="sr-only">Fout:</span><span class="bad" id="score-bad">0</span>
         <span class="lbl">Nog</span><span class="sr-only">te gaan:</span><span id="score-left">0</span>
       </div>
-      <div class="streak pill chunk" id="streak"></div>
       <div class="meter chunk" id="q-meter" role="img"><span class="plane" aria-hidden="true">&#9992;&#65039;</span><span class="slots" id="q-slots"></span></div>
     </div>
     <div class="progress" role="progressbar" aria-label="Voortgang van deze ronde" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
@@ -1182,7 +1192,6 @@ function startQuiz(m) {
 
   showScreen('quiz');
   $('quiz').classList.toggle('point', style === 'wijs');
-  updateStreak();
   renderQuizMeter();
   nextQuestion();
 }
@@ -1410,7 +1419,6 @@ function finishAnswer(ok, extraHtml) {
   $('sr-status').textContent = feedback.textContent;
 
   updateScore();
-  updateStreak();
   $('quiz').classList.add('answered');
   $('next-btn').focus({ preventScroll: true });
 }
@@ -1453,13 +1461,6 @@ function updateScore() {
   }
   lastPct = pct;
   document.querySelector('.progress').setAttribute('aria-valuenow', pct);
-}
-
-function updateStreak() {
-  const el = $('streak');
-  const show = streak >= 3;
-  if (show) el.innerHTML = `\u{1F525} ${streak}<span class="lbl"> op rij</span>`;
-  if (show !== el.classList.contains('show')) el.classList.toggle('show', show);
 }
 
 function endQuiz() {
@@ -1761,6 +1762,19 @@ function renderFlagList(owned) {
   }).join('');
 }
 $('flag-list').addEventListener('click', e => { const b = e.target.closest('.fl'); if (b) selectCountry(b.dataset.c, 'list'); });
+(() => {
+  const list = $('flag-list');
+  let active = null;
+  const layerOf = el => el && el.closest('.fl') && el.closest('.fl').querySelector('.holo');
+  list.addEventListener('pointerdown', e => { const h = layerOf(e.target); if (h) { active = h; holoPoint(h, h, e, 22); } });
+  list.addEventListener('pointermove', e => {
+    const h = layerOf(e.target);
+    if (active && e.pointerType !== 'mouse') return holoPoint(active, active, e, 22);
+    if (e.pointerType === 'mouse') { if (active && active !== h) holoRelease(active, active); active = h; if (h) holoPoint(h, h, e, 22); }
+  });
+  const end = () => { if (active) holoRelease(active, active); active = null; };
+  for (const t of ['pointerup', 'pointercancel', 'pointerleave']) list.addEventListener(t, end);
+})();
 
 // Een land kiezen: op de kaart oplichten én in het overzicht laten zien
 function selectCountry(code, from) {
@@ -1875,14 +1889,17 @@ function flyTo(code) {
   const mx = (from[0] + to[0]) / 2, my = Math.min(from[1], to[1]) - Math.max(8, Math.abs(to[0] - from[0]) * .22);
   const arcD = `M${from[0]} ${from[1]} Q${mx} ${my} ${to[0]} ${to[1]}`;
   // Het nieuwe land kleurt pas in bij de landing
-  drawWorld(svg, { skip: code, extra: `<path class="arc-ghost" d="${arcD}"/><path class="arc" id="rw-arc" d="${arcD}" pathLength="1" style="stroke-dasharray:0 1"/><circle class="land-ring" id="rw-ring" cx="${to[0]}" cy="${to[1]}" r="4"/><g class="plane-g" id="rw-plane"><text text-anchor="middle" dominant-baseline="central">&#9992;&#65039;</text></g>` });
+  drawWorld(svg, { skip: code, extra: `<path class="arc-ghost" d="${arcD}"/><path class="arc" id="rw-arc" d=""/><circle class="land-ring" id="rw-ring" cx="${to[0]}" cy="${to[1]}" r="4"/><g class="plane-g" id="rw-plane"><text text-anchor="middle" dominant-baseline="central">&#9992;&#65039;</text></g>` });
 
   const box = svg.getBoundingClientRect(), a = box.height / box.width;
   const fit = (x0, y0, x1, y1) => { const w = Math.max(x1 - x0, (y1 - y0) / a, 60) * 1.25; const h = w * a; return [(x0 + x1) / 2 - w / 2, (y0 + y1) / 2 - h / 2, w, h]; };
   const start = fit(from[0] - 40, from[1] - 25, from[0] + 40, from[1] + 25);
   const [dx, dy, dw, dh] = WC[code].bb;
   const end = fit(Math.min(from[0], dx), Math.min(my, from[1], dy), Math.max(from[0], dx + dw), Math.max(from[1], dy + dh));
-  const arc = svg.querySelector('#rw-arc'), len = arc.getTotalLength(), plane = svg.querySelector('#rw-plane');
+  const arc = svg.querySelector('#rw-arc'), plane = svg.querySelector('#rw-plane');
+  // Kwadratische bocht van NL (A) via controlepunt (B) naar de bestemming (C).
+  // Het gevlogen stuk tot t is zelf weer een kwadratische bocht, dus de lijn is altijd heel.
+  const A = from, B = [mx, my], C = to, lerp = (p, q, t) => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t];
   const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   const ZOOM = 900, FLY = 1900, t0 = performance.now();
   const frame = now => {
@@ -1890,12 +1907,13 @@ function flyTo(code) {
     const vb = start.map((s, i) => s + (end[i] - s) * ez);
     svg.setAttribute('viewBox', vb.join(' '));
     const tf = reduceMotion() ? 1 : Math.max(0, Math.min(1, (now - t0 - 450) / FLY)), ef = ease(tf);
-    arc.style.strokeDasharray = `${ef} 1`;
     scaleDots(svg, vb);
-    const p = arc.getPointAtLength(len * ef), q = arc.getPointAtLength(Math.min(len, len * ef + .5));
-    const ang = Math.atan2(q.y - p.y, q.x - p.x) * 180 / Math.PI + 45;
+    const ab = lerp(A, B, ef), p = lerp(ab, lerp(B, C, ef), ef);
+    arc.setAttribute('d', ef > 0 ? `M${A[0]} ${A[1]}Q${ab[0].toFixed(2)} ${ab[1].toFixed(2)} ${p[0].toFixed(2)} ${p[1].toFixed(2)}` : '');
+    const tx = 2 * (1 - ef) * (B[0] - A[0]) + 2 * ef * (C[0] - B[0]), ty = 2 * (1 - ef) * (B[1] - A[1]) + 2 * ef * (C[1] - B[1]);
+    const ang = Math.atan2(ty, tx) * 180 / Math.PI + 45;
     const sc = vb[2] / 300;
-    plane.setAttribute('transform', `translate(${p.x} ${p.y}) scale(${sc}) rotate(${ang})`);
+    plane.setAttribute('transform', `translate(${p[0]} ${p[1]}) scale(${sc}) rotate(${ang})`);
     plane.style.opacity = tf >= 1 ? 0 : 1;
     if (tf < 1) requestAnimationFrame(frame); else land(code, won.shiny, number);
   };
@@ -1918,22 +1936,41 @@ function land(code, shiny, number) {
   setTimeout(() => {
     $('rw-card').hidden = false;
     const st = $('rw-sticker');
-    st.classList.remove('in'); void st.offsetWidth; st.classList.add('in');
+    st.classList.remove('in', 'shown'); st.style.transform = ''; void st.offsetWidth; st.classList.add('in');
     launchConfetti(shiny ? 120 : 70);
     $('rw-continue').focus({ preventScroll: true });
     $('rw-card').scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'nearest' });
   }, 350);
 }
 
-// Glans volgt je vinger of muis
-$('rw-sticker').addEventListener('pointermove', e => {
-  const r = e.currentTarget.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
-  const f = $('rw-flag');
-  f.style.setProperty('--hx', (x * 100) + '%');
-  f.style.setProperty('--tilt', ((y - .5) * 40) + 'deg');
-  e.currentTarget.style.transform = `rotateY(${(x - .5) * 18}deg) rotateX(${(.5 - y) * 14}deg)`;
-});
-$('rw-sticker').addEventListener('pointerleave', e => { e.currentTarget.style.transform = ''; });
+// Glans volgt je vinger of muis: de regenboog schuift mee en de vlag kantelt naar je vinger toe.
+// Bij loslaten veert alles rustig terug.
+function holoPoint(card, layer, e, tilt) {
+  const r = card.getBoundingClientRect();
+  const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), y = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+  layer.classList.add('touching');
+  layer.style.setProperty('--hx', (100 - x * 100).toFixed(1) + '%');
+  layer.style.setProperty('--tilt', ((y - .5) * 50).toFixed(1) + 'deg');
+  card.style.transition = 'transform 90ms ease-out';
+  if (tilt) card.style.transform = `perspective(600px) rotateY(${((x - .5) * tilt).toFixed(1)}deg) rotateX(${((.5 - y) * tilt * .8).toFixed(1)}deg) scale(1.03)`;
+}
+function holoRelease(card, layer) {
+  card.style.transition = '';
+  layer.classList.remove('touching');
+  layer.style.removeProperty('--hx');
+  layer.style.removeProperty('--tilt');
+  card.style.transform = '';
+}
+// De beloningssticker: slepen kantelt hem (scrollt dan niet)
+(() => {
+  const st = $('rw-sticker');
+  let down = false;
+  st.addEventListener('pointerdown', e => { down = true; try { st.setPointerCapture(e.pointerId); } catch {} holoPoint(st, $('rw-flag'), e, 24); });
+  st.addEventListener('pointermove', e => { if (down || e.pointerType === 'mouse') holoPoint(st, $('rw-flag'), e, 24); });
+  for (const t of ['pointerup', 'pointercancel', 'pointerleave']) st.addEventListener(t, () => { down = false; holoRelease(st, $('rw-flag')); });
+  // Na de inkom-animatie mag de vinger de stand bepalen
+  st.addEventListener('animationend', () => { st.classList.remove('in'); st.classList.add('shown'); });
+})();
 
 function closeReward() {
   const r = $('reward');
