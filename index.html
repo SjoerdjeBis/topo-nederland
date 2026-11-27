@@ -373,6 +373,7 @@
   .map-panel > svg { position: absolute; inset: 0; width: 100%; height: 100%; cursor: grab; }
   .map-panel > svg:active { cursor: grabbing; }
   .zoom-btns { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .back-ico { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
   .zoom-btns .icon-btn { width: 40px; height: 40px; font-size: 22px; border-radius: 12px; }
   .cont-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 6px 6px 2px; scrollbar-width: none; flex-shrink: 0; }
   .cont-chips::-webkit-scrollbar { display: none; }
@@ -516,7 +517,7 @@
   <!-- ============ ONDERWERPEN VAN EEN TOETS ============ -->
   <section class="screen" id="menu">
     <div class="head">
-      <button class="icon-btn chunk press" onclick="goHome()" aria-label="Alle toetsen">&larr;</button>
+      <button class="icon-btn chunk press" onclick="goHome()" aria-label="Alle toetsen"><svg class="back-ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10H4.5M9.5 4.5 4 10l5.5 5.5"/></svg></button>
       <h2 id="menu-title"></h2>
     </div>
     <div class="scroll"><div class="inner">
@@ -535,7 +536,7 @@
   <!-- ============ TOETS ============ -->
   <section class="screen" id="quiz">
     <div class="topbar">
-      <button class="icon-btn chunk press" onclick="goMenu()" aria-label="Terug naar menu">&larr;</button>
+      <button class="icon-btn chunk press" onclick="goMenu()" aria-label="Terug naar menu"><svg class="back-ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10H4.5M9.5 4.5 4 10l5.5 5.5"/></svg></button>
       <div class="score pill chunk">
         <span aria-hidden="true">&#9989;</span><span class="sr-only">Goed:</span><span class="good" id="score-good">0</span>
         <span aria-hidden="true">&#10060;</span><span class="sr-only">Fout:</span><span class="bad" id="score-bad">0</span>
@@ -584,7 +585,7 @@
   <!-- ============ MIJN WERELD ============ -->
   <section class="screen" id="world">
     <div class="head">
-      <button class="icon-btn chunk press" onclick="goHome()" aria-label="Terug naar start">&larr;</button>
+      <button class="icon-btn chunk press" onclick="goHome()" aria-label="Terug naar start"><svg class="back-ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10H4.5M9.5 4.5 4 10l5.5 5.5"/></svg></button>
       <h2>Mijn wereld</h2>
       <span class="right pill chunk" id="world-count"></span>
     </div>
